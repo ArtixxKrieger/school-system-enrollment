@@ -1,6 +1,11 @@
 {
   "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/enrollment run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/handler.js": {
+      "includeFiles": "lib/db/drizzle/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/handler" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
