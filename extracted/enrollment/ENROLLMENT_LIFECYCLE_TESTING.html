@@ -1,0 +1,519 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Manual Testing Guide for Enrollment Lifecycle
+ * This script provides a step-by-step guide to manually test all scenarios
+ * Run each test in order and verify expected outcomes
+ */
+
+header('Content-Type: text/html; charset=utf-8');
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enrollment Lifecycle Testing Guide</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 20px auto; }
+        .test-section { margin: 30px 0; border: 1px solid #ccc; padding: 15px; }
+        .test-section h2 { margin-top: 0; color: #333; }
+        .steps { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .step { margin: 10px 0; padding: 8px; border-left: 3px solid #007bff; padding-left: 10px; }
+        .verify { background: #e8f5e9; padding: 8px; margin: 5px 0; border-left: 3px solid #4caf50; }
+        .issue { background: #fff3e0; padding: 8px; margin: 5px 0; border-left: 3px solid #ff9800; }
+        code { background: #f0f0f0; padding: 2px 4px; }
+        .curl-cmd { background: #000; color: #0f0; padding: 10px; margin: 5px 0; font-family: monospace; font-size: 11px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>🎓 Enrollment Lifecycle - Complete Testing Guide</h1>
+<p>This guide provides step-by-step instructions to test all enrollment lifecycle scenarios.</p>
+
+<div class="test-section">
+    <h2>📋 Setup & Database Check</h2>
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Verify MySQL database connection
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as courses FROM courses; SELECT COUNT(*) as curriculum FROM curriculum;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Both queries should return counts. If curriculum is 0, run migrations first.
+        </div>
+        <div class="step">
+            <strong>Step 2:</strong> Check enrollment_settings configuration
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT * FROM enrollment_settings WHERE id = 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Should show enrollment settings with auto_progression and strict_enrollment_windows flags
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 1: New Applicant Pre-Registration (Regression Test)</h2>
+    <p><strong>Purpose:</strong> Verify new applicant flow still works correctly (not affected by re-enrollment logic)</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Pre-register a new student via web form
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/pre_reg.php</code></li>
+                <li>Fill form with sample data (Name, Email, Phone, Course, etc.)</li>
+                <li>Submit and note the Pre-Reg Number (e.g., PRE-12345)</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Query database to verify enrollee created
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT * FROM enrollees WHERE status='pre-registered' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>status = 'pre-registered'</li>
+                <li>enrollment_type = 'new'</li>
+                <li>year_level = 1</li>
+                <li>existing_student_id = NULL</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Approve the pre-registration in UI
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/enrollees.php</code></li>
+                <li>Find and click "Approve" for the new enrollee</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Query database to verify student created
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, status, progression_status FROM students WHERE status='active' AND progression_status='enrolled' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>year_level = 1</li>
+                <li>current_semester = 1</li>
+                <li>status = 'active'</li>
+                <li>progression_status = 'enrolled'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Verify subjects assigned
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as subjects FROM student_enrolled_subjects ses INNER JOIN curriculum cu ON cu.id=ses.curriculum_id WHERE ses.student_id=(SELECT id FROM students WHERE status='active' ORDER BY id DESC LIMIT 1) AND cu.year_level=1 AND cu.semester=1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> subjects > 0 (some subjects should be assigned)
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 2: End 1st Semester → Re-enroll → Student in 2nd Semester</h2>
+    <p><strong>Purpose:</strong> Verify semester progression within same year works correctly</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Create or find a 1st year, 1st semester student
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, status FROM students WHERE year_level=1 AND current_semester=1 AND status='active' LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> At least one such student (use Pre-Reg from TEST 1 if available)
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> End 1st semester in UI
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/student.php</code></li>
+                <li>Find the student</li>
+                <li>Click "End 1st Sem" button</li>
+                <li>Note: This calls <code>/api/student_year_progression.php</code> with action=trigger_semester_end, semester=1</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Verify student moved to semester 2 with pending_progression
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, progression_status, status FROM students WHERE year_level=1 AND current_semester=2 ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>year_level = 1 (unchanged)</li>
+                <li>current_semester = 2</li>
+                <li>progression_status = 'pending_progression'</li>
+                <li>status = 'active'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Verify returning enrollee created
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT * FROM enrollees WHERE enrollment_type='returning' AND status='pending' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>enrollment_type = 'returning'</li>
+                <li>status = 'pending'</li>
+                <li>existing_student_id = (student_id from previous step)</li>
+                <li>year_level = 1</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Re-enroll in UI (Approve the returning enrollee)
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/enrollees.php</code></li>
+                <li>Go to "Returning" tab</li>
+                <li>Click "Re-enroll" button for the student</li>
+                <li>This calls <code>/api/enrollees_approve.php</code> with enrollee_id</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 6:</strong> Verify student is now enrolled in 2nd semester
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, progression_status, status FROM students WHERE year_level=1 AND current_semester=2 AND progression_status='enrolled' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>current_semester = 2</li>
+                <li>progression_status = 'enrolled'</li>
+                <li>status = 'active'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 7:</strong> Verify subjects assigned for 2nd semester
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as subjects FROM student_enrolled_subjects ses INNER JOIN curriculum cu ON cu.id=ses.curriculum_id WHERE ses.student_id=(SELECT id FROM students WHERE current_semester=2 AND progression_status='enrolled' ORDER BY id DESC LIMIT 1) AND cu.year_level=1 AND cu.semester=2;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> subjects > 0
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 3: End 2nd Semester → Re-enroll → Student in Year 2 Semester 1</h2>
+    <p><strong>Purpose:</strong> Verify year advancement works and creates correct re-enrollee</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Create or find a 1st year, 2nd semester student
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester FROM students WHERE year_level=1 AND current_semester=2 AND progression_status='enrolled' LIMIT 1;"</div>
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> End 2nd semester in UI
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/student.php</code></li>
+                <li>Find the 1st year 2nd semester student</li>
+                <li>Click "End 2nd Sem" button</li>
+                <li>This calls <code>/api/student_year_progression.php</code> with action=trigger_semester_end, semester=2</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Verify student advanced to year 2, semester 1 with pending_progression
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, progression_status FROM students WHERE year_level=2 AND current_semester=1 AND progression_status='pending_progression' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>year_level = 2</li>
+                <li>current_semester = 1</li>
+                <li>progression_status = 'pending_progression'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Verify returning enrollee created with year_level=2
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT * FROM enrollees WHERE enrollment_type='returning' AND year_level=2 AND status='pending' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>enrollment_type = 'returning'</li>
+                <li>year_level = 2</li>
+                <li>status = 'pending'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Re-enroll the student
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/enrollees.php</code></li>
+                <li>Go to "Returning" tab</li>
+                <li>Click "Re-enroll" for the year 2 student</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 6:</strong> Verify student is enrolled in year 2, semester 1
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, progression_status FROM students WHERE year_level=2 AND current_semester=1 AND progression_status='enrolled' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>year_level = 2</li>
+                <li>current_semester = 1</li>
+                <li>progression_status = 'enrolled'</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 7:</strong> Verify subjects assigned for year 2, semester 1
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as subjects FROM student_enrolled_subjects ses INNER JOIN curriculum cu ON cu.id=ses.curriculum_id WHERE ses.student_id=(SELECT id FROM students WHERE year_level=2 AND current_semester=1 AND progression_status='enrolled' ORDER BY id DESC LIMIT 1) AND cu.year_level=2 AND cu.semester=1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> subjects > 0
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 4: End 2nd Semester for 4th Year → Graduation</h2>
+    <p><strong>Purpose:</strong> Verify 4th year 2nd semester students graduate (don't get re-enrollee)</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Create a 4th year, 2nd semester student
+            <div class="curl-cmd">mysql -u root enrollment -e "INSERT INTO students (student_id, pre_reg_number, first_name, last_name, email, phone, course_id, year_level, status, progression_status, is_account_active, current_semester, current_academic_year, enrollment_date) VALUES (CONCAT('TST4-', UNIX_TIMESTAMP()), CONCAT('PRE-4-', UNIX_TIMESTAMP()), 'Test4Year', 'Senior', CONCAT('test4yr_', UNIX_TIMESTAMP(), '@test.local'), '09100000004', (SELECT id FROM courses LIMIT 1), 4, 'active', 'enrolled', 1, 2, '2025-2026', NOW()); SELECT LAST_INSERT_ID();"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> A student ID is returned (e.g., 123). Note this ID for next steps.
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Verify student is in database as 4th year, semester 2
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, year_level, current_semester, status FROM students WHERE year_level=4 AND current_semester=2 AND status='active' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> End 2nd semester for this 4th year student
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/student.php</code></li>
+                <li>Find the 4th year, 2nd semester student</li>
+                <li>Click "End 2nd Sem" button</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Verify student status changed to 'graduated'
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT id, student_id, year_level, current_semester, status, graduated_at, is_account_active FROM students WHERE year_level=4 AND status='graduated' ORDER BY id DESC LIMIT 1;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>status = 'graduated'</li>
+                <li>graduated_at = NOT NULL (current timestamp)</li>
+                <li>is_account_active = 0</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Verify NO returning enrollee created for graduated student
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as count FROM enrollees WHERE enrollment_type='returning' AND year_level=4 AND status='pending';"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong>
+            <ul>
+                <li>count = 0 (no re-enrollee should be created for year 4)</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 6:</strong> Verify graduated student appears in Records
+            <ul>
+                <li>Go to: <code>http://localhost/enrollment/superadmin/records.php</code></li>
+                <li>Should see the 4th year student in the "Graduated" section</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>Step 7:</strong> Verify via API
+            <div class="curl-cmd">curl -s "http://localhost/enrollment/api/records_list.php" | grep -i "graduated"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Should show the graduated student in the response
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 5: Idempotency - Re-run Single Approval</h2>
+    <p><strong>Purpose:</strong> Verify approving the same enrollee twice is safe</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Create a pre-registration enrollee
+            <div class="curl-cmd">mysql -u root enrollment -e "INSERT INTO enrollees (pre_reg_number, first_name, last_name, email, phone, course_id, year_level, status, enrollment_type, application_date) VALUES (CONCAT('IDEM-', UNIX_TIMESTAMP()), 'Idempotent', 'Test', CONCAT('idem_', UNIX_TIMESTAMP(), '@test.local'), '09199999999', (SELECT id FROM courses LIMIT 1), 1, 'pre-registered', 'new', NOW()); SELECT LAST_INSERT_ID();"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> An enrollee ID is returned (e.g., 456). Note this ID.
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Approve the enrollee first time (via UI or API)
+            <ul>
+                <li>Via UI: Go to enrollees, click Approve</li>
+                <li>Via cURL: 
+                <div class="curl-cmd">curl -X POST "http://localhost/enrollment/api/enrollees_approve.php" \
+  -H "Content-Type: application/json" \
+  -d '{"enrollee_id": 456, "admin_id": 1}'</div>
+                </li>
+            </ul>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Response with <code>ok: true</code>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Attempt to approve the SAME enrollee AGAIN
+            <div class="curl-cmd">curl -X POST "http://localhost/enrollment/api/enrollees_approve.php" \
+  -H "Content-Type: application/json" \
+  -d '{"enrollee_id": 456, "admin_id": 1}'</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Response with <code>ok: false</code> and error message "Enrollee not found or already processed" (because status is now "approved")
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Query database to verify only ONE student record exists
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as count FROM students WHERE email LIKE 'idem_%';"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> count = 1 (only one student created, not duplicated)
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>📝 TEST 6: Idempotency - Re-run Bulk Approval</h2>
+    <p><strong>Purpose:</strong> Verify bulk approval doesn't duplicate-process already-approved enrollees</p>
+    
+    <div class="steps">
+        <div class="step">
+            <strong>Step 1:</strong> Create multiple pre-registration enrollees
+            <div class="curl-cmd">mysql -u root enrollment -e "INSERT INTO enrollees (pre_reg_number, first_name, last_name, email, phone, course_id, year_level, status, enrollment_type, application_date) VALUES 
+  (CONCAT('BULK-1-', UNIX_TIMESTAMP()), 'Bulk', 'One', CONCAT('bulk1_', UNIX_TIMESTAMP(), '@test.local'), '09191111111', (SELECT id FROM courses LIMIT 1), 1, 'pre-registered', 'new', NOW()),
+  (CONCAT('BULK-2-', UNIX_TIMESTAMP()), 'Bulk', 'Two', CONCAT('bulk2_', UNIX_TIMESTAMP(), '@test.local'), '09192222222', (SELECT id FROM courses LIMIT 1), 1, 'pre-registered', 'new', NOW());
+SELECT GROUP_CONCAT(id) as ids FROM enrollees WHERE pre_reg_number LIKE 'BULK-%' AND status='pre-registered' ORDER BY id DESC LIMIT 2;"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Two enrollee IDs returned (e.g., 457, 458)
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Bulk approve these enrollees (first time)
+            <div class="curl-cmd">curl -X POST "http://localhost/enrollment/api/enrollees_bulk_approve.php" \
+  -H "Content-Type: application/json" \
+  -d '{"enrollee_ids": [457, 458], "admin_id": 1}'</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Response with <code>ok: true</code> and <code>approved_count: 2</code>
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Attempt bulk approve AGAIN with same enrollee IDs
+            <div class="curl-cmd">curl -X POST "http://localhost/enrollment/api/enrollees_bulk_approve.php" \
+  -H "Content-Type: application/json" \
+  -d '{"enrollee_ids": [457, 458], "admin_id": 1}'</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> Response with <code>ok: true</code> but <code>approved_count: 0</code> (no new approvals) or errors for each enrollee
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Verify database shows only 2 student records (not 4)
+            <div class="curl-cmd">mysql -u root enrollment -e "SELECT COUNT(*) as count FROM students WHERE email LIKE 'bulk%';"</div>
+        </div>
+        <div class="verify">
+            <strong>Expected:</strong> count = 2 (not duplicated)
+        </div>
+    </div>
+</div>
+
+<div class="test-section">
+    <h2>🔍 Summary Checklist</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Test Scenario</th>
+                <th>Key Verification</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>TEST 1: New Pre-Registration</td>
+                <td>Student year=1, sem=1, status=active, progression=enrolled</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+            <tr>
+                <td>TEST 2: End 1st Sem + Re-enroll</td>
+                <td>Student year=1, sem=2, enrolled with subjects</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+            <tr>
+                <td>TEST 3: End 2nd Sem + Re-enroll</td>
+                <td>Student year=2, sem=1, enrolled with year 2 subjects</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+            <tr>
+                <td>TEST 4: 4th Year Graduation</td>
+                <td>Student status=graduated, NO re-enrollee created</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+            <tr>
+                <td>TEST 5: Single Approval Idempotency</td>
+                <td>2nd approval fails, NO duplicate student</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+            <tr>
+                <td>TEST 6: Bulk Approval Idempotency</td>
+                <td>2nd bulk fails gracefully, NO duplicate students</td>
+                <td>[ ] Pass  [ ] Fail</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="test-section">
+    <h2>🐛 Troubleshooting</h2>
+    
+    <div class="issue">
+        <strong>Issue:</strong> Curriculum not found for year/semester
+        <strong>Solution:</strong> Run database migrations first:
+        <div class="curl-cmd">mysql -u root enrollment < database_migration.sql
+mysql -u root enrollment < database_migration_reenroll.sql</div>
+    </div>
+    
+    <div class="issue">
+        <strong>Issue:</strong> No courses found in database
+        <strong>Solution:</strong> Create a test course first:
+        <div class="curl-cmd">mysql -u root enrollment -e "INSERT INTO courses (code, name, description) VALUES ('TEST', 'Test Course', 'For testing');"</div>
+    </div>
+    
+    <div class="issue">
+        <strong>Issue:</strong> Enrollment windows blocking approval
+        <strong>Solution:</strong> Disable strict enrollment windows in settings:
+        <div class="curl-cmd">mysql -u root enrollment -e "UPDATE enrollment_settings SET strict_enrollment_windows = 0 WHERE id = 1;"</div>
+    </div>
+    
+    <div class="issue">
+        <strong>Issue:</strong> Permission denied when calling API
+        <strong>Solution:</strong> Ensure you're logged in as admin. Check in config/auth.php that session permissions are granted.
+    </div>
+</div>
+
+</body>
+</html>
+<?php

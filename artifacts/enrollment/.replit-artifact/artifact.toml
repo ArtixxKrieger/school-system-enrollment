@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Kurios Enrollment System"
+version = "1.0.0"
+id = "artifacts/enrollment"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18111
+
+[services.development]
+run = "pnpm --filter @workspace/enrollment run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/enrollment", "run", "build" ]
+publicDir = "artifacts/enrollment/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18111"
+BASE_PATH = "/"

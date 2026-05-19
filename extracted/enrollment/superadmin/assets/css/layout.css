@@ -1,0 +1,1257 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width, 256px);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+body.sidebar-open-mobile {
+    overflow: hidden;
+}
+
+.content-area {
+    flex: 1;
+    padding: 32px;
+}
+
+.dashboard-container {
+    max-height: 2000px;
+}
+
+.profile-container {
+    width: 100%;
+    margin-bottom: 24px;
+    padding: 0 16px;
+}
+
+.profile-section {
+    margin-bottom: 32px;
+}
+
+.profile-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.profile-avatar svg {
+    width: 40px;
+    height: 40px;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.profile-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.profile-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-label {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.profile-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: none;
+}
+
+.profile-avatar.has-image svg,
+.profile-avatar.has-image .profile-avatar-fallback {
+    display: none;
+}
+
+.profile-avatar.has-image {
+    background: transparent;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon.blue,
+.stat-icon.green,
+.stat-icon.purple,
+.stat-icon.orange {
+    background-color: #e4e2e2;
+    color: lab(29.83% -33.6 20.24);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-content h3 {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.stat-change {
+    font-size: 14px;
+}
+
+.stat-change.positive {
+    color: #018547;
+}
+
+.stat-change.neutral {
+    color: #6b7280;
+}
+
+.activity-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-curriculum-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.dashboard-section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a4d2e;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.dashboard-section-heading .section-title {
+    margin-bottom: 4px;
+}
+
+.section-subtitle {
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.curriculum-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.curriculum-summary-item {
+    padding: 14px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+}
+
+.curriculum-summary-label {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.curriculum-summary-item strong {
+    font-size: 20px;
+    color: #111827;
+}
+
+.curriculum-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.curriculum-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.curriculum-chip.muted {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.curriculum-program-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.curriculum-program-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+}
+
+.curriculum-program-item strong {
+    display: block;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.curriculum-program-meta {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.curriculum-program-count {
+    color: #1a4d2e;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.dashboard-insight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.dashboard-metric-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dashboard-metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+}
+
+.dashboard-metric-row span {
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.dashboard-metric-row strong {
+    color: #111827;
+    font-size: 16px;
+}
+
+.dashboard-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.dashboard-action-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-action-link:hover {
+    background: #dcfce7;
+    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12);
+    transform: translateY(-1px);
+}
+
+.activity-empty {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.activity-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.activity-item:hover {
+    background-color: #eaecee;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f2f2f3;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #1a4d2e;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-text {
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.activity-time {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.page-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-content h2 {
+    color: #077431;
+    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+
+    .sidebar.mobile-visible {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar-backdrop:not([hidden]) {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 999;
+    }
+
+    .main-content {
+        margin-left: 0;
+        min-width: 0;
+    }
+
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-title {
+        font-size: 18px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header {
+        padding: 12px 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-insight-grid,
+    .dashboard-curriculum-grid,
+    .dashboard-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-area {
+        padding: 16px;
+        min-width: 0;
+    }
+
+    .page-content {
+        padding: 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .profile-card {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .profile-name {
+        font-size: 20px;
+    }
+
+    .stat-value {
+        font-size: 26px;
+    }
+
+    .activity-section {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 16px;
+    }
+
+    .logo-text h1 {
+        font-size: 12px;
+    }
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: #01741a;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: #006b28;
+    border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #02641f;
+}
+
+
+/* ---------------------------------------------------------------
+   DARK MODE � Comprehensive overrides for all pages
+   Activated by: body.dark-mode
+   --------------------------------------------------------------- */
+
+/* -- Core body & layout -------------------------- */
+body.dark-mode {
+    background-color: #0f1510;
+    color: #e5e7eb;
+}
+
+/* -- Collapsed sidebar shifts content ------------ */
+.sidebar.collapsed ~ .main-content {
+    margin-left: var(--sidebar-collapsed-width, 64px);
+}
+
+/* -- White surface base (shared) ----------------- */
+body.dark-mode .stat-card,
+body.dark-mode .activity-section,
+body.dark-mode .page-content,
+body.dark-mode .profile-card,
+body.dark-mode .students-section,
+body.dark-mode .student-list-section,
+body.dark-mode .student-table-container,
+body.dark-mode .filters-section,
+body.dark-mode .filter-section,
+body.dark-mode .enrollment-header,
+body.dark-mode .enrollment-stat-card,
+body.dark-mode .course-tabs-section,
+body.dark-mode .curriculum-section,
+body.dark-mode .curriculum-stat-card,
+body.dark-mode .records-stat-card,
+body.dark-mode .records-panel,
+body.dark-mode .notification-panel,
+body.dark-mode .settings-card,
+body.dark-mode .report-item,
+body.dark-mode .backup-item,
+body.dark-mode .profile-edit-card,
+body.dark-mode .profile-form-card,
+body.dark-mode .info-card,
+body.dark-mode .filter-card,
+body.dark-mode .table-card,
+body.dark-mode .course-card,
+body.dark-mode .student-card,
+body.dark-mode .rm-role-card,
+body.dark-mode .rm-tab-content,
+body.dark-mode .rm-permission-section,
+body.dark-mode .rm-profile-preview,
+body.dark-mode .rm-profile-card,
+body.dark-mode .rm-profile-edit-card,
+body.dark-mode .rm-profile-form-card,
+body.dark-mode .rm-profile-section-block,
+body.dark-mode .rm-role-user-info-card,
+body.dark-mode .panel-card,
+body.dark-mode .enrollment-settings-page .panel-card {
+    background: #192219 !important;
+    border-color: #263228 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+/* -- Heading colors ------------------------------- */
+body.dark-mode .stat-content h3,
+body.dark-mode .students-title,
+body.dark-mode .student-list-header h2,
+body.dark-mode .student-list-header h3,
+body.dark-mode .records-header h2,
+body.dark-mode .curriculum-title,
+body.dark-mode .settings-header h2,
+body.dark-mode .rm-title,
+body.dark-mode .panel-header h3,
+body.dark-mode .rm-role-card-title,
+body.dark-mode .rm-section-header h3,
+body.dark-mode .profile-page-header h2,
+body.dark-mode .profile-edit-details h3,
+body.dark-mode .profile-form-card h3,
+body.dark-mode .section-heading h4,
+body.dark-mode .enrollment-settings-page .panel-header h2,
+body.dark-mode .enrollment-settings-page .enrollment-header h1,
+body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .stat-content h3 { color: #9ca3af !important; }
+
+body.dark-mode .stat-value,
+body.dark-mode .stat-number,
+body.dark-mode .records-stat-number {
+    color: #f3f4f6;
+}
+
+body.dark-mode .section-title { color: #4ade80; }
+body.dark-mode .page-content h2 { color: #4ade80; }
+body.dark-mode .records-header h2 { color: #4ade80 !important; }
+body.dark-mode .curriculum-title { color: #4ade80 !important; }
+
+/* Muted text */
+body.dark-mode .stat-change.neutral,
+body.dark-mode .detail-label,
+body.dark-mode .stat-label,
+body.dark-mode .records-stat-label,
+body.dark-mode .records-header p,
+body.dark-mode .rm-subtitle,
+body.dark-mode .settings-header p,
+body.dark-mode .panel-header p,
+body.dark-mode .rm-role-card-description,
+body.dark-mode .profile-page-header p,
+body.dark-mode .profile-edit-details p,
+body.dark-mode .profile-edit-note,
+body.dark-mode .profile-form-card p,
+body.dark-mode .section-heading p,
+body.dark-mode .enrollment-filter-label,
+body.dark-mode .table-subtext,
+body.dark-mode .enrollee-id-sub,
+body.dark-mode .student-modal-subtitle,
+body.dark-mode .enrollment-settings-page .section-subtitle,
+body.dark-mode .enrollment-settings-page .panel-header p,
+body.dark-mode .pagination-info,
+body.dark-mode .pagination-info-text,
+body.dark-mode .pagination-status,
+body.dark-mode .student-pagination-info,
+body.dark-mode .rm-users-pagination-info {
+    color: #9ca3af !important;
+}
+
+body.dark-mode .detail-value { color: #f3f4f6; }
+
+/* -- Tables --------------------------------------- */
+body.dark-mode table,
+body.dark-mode .student-table,
+body.dark-mode .students-table,
+body.dark-mode .curriculum-table,
+body.dark-mode .records-table,
+body.dark-mode .rm-permission-table,
+body.dark-mode .rm-audit-table,
+body.dark-mode .enrollment-settings-page .enrollment-table {
+    background: #192219;
+    color: #e5e7eb;
+}
+
+body.dark-mode table thead,
+body.dark-mode .student-table thead,
+body.dark-mode .students-table thead,
+body.dark-mode .curriculum-table thead,
+body.dark-mode .records-table thead,
+body.dark-mode .rm-permission-table thead,
+body.dark-mode .rm-audit-table thead,
+body.dark-mode .enrollment-settings-page .enrollment-table th,
+body.dark-mode .curriculum-table-container thead {
+    background: #1e2a20 !important;
+}
+
+body.dark-mode table th,
+body.dark-mode .student-table th,
+body.dark-mode .students-table th,
+body.dark-mode .curriculum-table th,
+body.dark-mode .records-table th,
+body.dark-mode .rm-permission-table th,
+body.dark-mode .rm-audit-table th,
+body.dark-mode .curriculum-table-container th {
+    background: #1e2a20;
+    color: #9ca3af;
+    border-color: #263228;
+}
+
+body.dark-mode table td,
+body.dark-mode .student-table td,
+body.dark-mode .students-table td,
+body.dark-mode .curriculum-table td,
+body.dark-mode .records-table td,
+body.dark-mode .rm-permission-table td,
+body.dark-mode .rm-audit-table td,
+body.dark-mode .curriculum-table-container td,
+body.dark-mode .enrollment-settings-page .enrollment-table td {
+    color: #d1d5db;
+    border-color: #263228;
+}
+
+body.dark-mode table tr:hover,
+body.dark-mode .student-table tbody tr:hover,
+body.dark-mode .students-table tbody tr:hover,
+body.dark-mode .curriculum-table tbody tr:hover,
+body.dark-mode .records-table tr:hover,
+body.dark-mode .rm-audit-table tr:hover,
+body.dark-mode .curriculum-table-container tbody tr:hover,
+body.dark-mode .enrollment-settings-page .enrollment-table tr:hover {
+    background-color: #1e2a20 !important;
+}
+
+body.dark-mode .curriculum-table tbody tr.selected {
+    background-color: #1e3a22 !important;
+}
+
+body.dark-mode .curriculum-table-container {
+    border-color: #263228;
+}
+
+/* -- Modals --------------------------------------- */
+body.dark-mode .modal-overlay {
+    background-color: rgba(0,0,0,0.7);
+}
+
+body.dark-mode .modal-content,
+body.dark-mode .modal-container,
+body.dark-mode .rm-modal-content {
+    background: #192219 !important;
+    color: #e5e7eb;
+    border-color: #263228;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .rm-modal-header {
+    background: #192219;
+    border-bottom-color: #263228 !important;
+}
+
+body.dark-mode .modal-header h3,
+body.dark-mode .modal-title,
+body.dark-mode .rm-modal-header h3 {
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .modal-body,
+body.dark-mode .rm-modal-body {
+    background: #192219;
+    color: #d1d5db;
+}
+
+body.dark-mode .modal-footer,
+body.dark-mode .rm-modal-footer {
+    background: #192219;
+    border-top-color: #263228 !important;
+}
+
+body.dark-mode .modal-close,
+body.dark-mode .modal-close-btn,
+body.dark-mode .rm-modal-close {
+    color: #9ca3af;
+    background: transparent;
+}
+
+body.dark-mode .modal-close:hover,
+body.dark-mode .modal-close-btn:hover,
+body.dark-mode .rm-modal-close:hover {
+    background-color: #263228;
+    color: #f3f4f6;
+}
+
+body.dark-mode .modal-section,
+body.dark-mode .backup-section,
+body.dark-mode .profile-section-block {
+    border-color: #263228 !important;
+}
+
+body.dark-mode .modal-section h4,
+body.dark-mode .backup-section h4,
+body.dark-mode .modal-text-muted { color: #9ca3af; }
+
+/* Student modal inner elements */
+body.dark-mode .student-modal-profile-card,
+body.dark-mode .student-detail-item,
+body.dark-mode .irregular-controls {
+    background: #1e2a20 !important;
+    border-color: #263228 !important;
+}
+
+body.dark-mode .student-modal-name { color: #f3f4f6; }
+body.dark-mode .student-modal-subtitle { color: #9ca3af; }
+body.dark-mode .student-detail-item .detail-label { color: #9ca3af; }
+body.dark-mode .student-detail-item strong { color: #f3f4f6; }
+
+body.dark-mode .student-photo-placeholder {
+    background: #1e2a20;
+    color: #9ca3af;
+}
+
+/* -- Forms ---------------------------------------- */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea,
+body.dark-mode .form-label input,
+body.dark-mode .form-label select,
+body.dark-mode .form-label textarea,
+body.dark-mode .rm-form-input,
+body.dark-mode .filter-input,
+body.dark-mode .filter-select,
+body.dark-mode .rm-search input,
+body.dark-mode .records-search-input,
+body.dark-mode .search-input,
+body.dark-mode .input,
+body.dark-mode .enrollment-settings-page .date-input,
+body.dark-mode .enrollment-settings-page .slot-input,
+body.dark-mode .enrollment-settings-page .enrollment-table select,
+body.dark-mode .enrollment-settings-page .enrollment-table input,
+body.dark-mode .enrollment-settings-page .override-field textarea,
+body.dark-mode .enrollment-settings-page .override-field select,
+body.dark-mode .enrollment-settings-page .override-field input {
+    background: #1e2a20 !important;
+    color: #e5e7eb !important;
+    border-color: #2e3e30 !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder,
+body.dark-mode .search-input::placeholder,
+body.dark-mode .records-search-input::placeholder {
+    color: #6b7280 !important;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus,
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .search-input:focus,
+body.dark-mode .records-search-input:focus {
+    border-color: #2d5f3f !important;
+    box-shadow: 0 0 0 3px rgba(45,106,79,0.25) !important;
+}
+
+body.dark-mode input[readonly],
+body.dark-mode .form-group input[readonly],
+body.dark-mode .form-group select:disabled,
+body.dark-mode .profile-value {
+    background: #141c16 !important;
+    color: #6b7280 !important;
+}
+
+body.dark-mode .form-group label,
+body.dark-mode .form-label,
+body.dark-mode .rm-form-group label,
+body.dark-mode .checkbox-group label,
+body.dark-mode .enrollment-settings-page .toggle-field {
+    color: #d1d5db !important;
+}
+
+body.dark-mode .enrollment-settings-page .toggle-field {
+    background: #1e2a20 !important;
+    border-color: #2e3e30 !important;
+}
+
+/* -- Filters & search bars ------------------------ */
+body.dark-mode .filters-section,
+body.dark-mode .filters-row,
+body.dark-mode .rm-audit-filters,
+body.dark-mode .enrollment-header {
+    border-color: #263228 !important;
+}
+
+body.dark-mode .filter-group label,
+body.dark-mode .rm-filter-group label,
+body.dark-mode .filter-label-muted {
+    color: #9ca3af !important;
+}
+
+/* -- Tabs ----------------------------------------- */
+body.dark-mode .year-tabs {
+    background: #1e2a20;
+}
+
+body.dark-mode .year-tab {
+    color: #9ca3af;
+}
+
+body.dark-mode .year-tab:hover {
+    background-color: #263228;
+}
+
+body.dark-mode .year-tab.active {
+    background-color: #192219 !important;
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .year-count { color: #6b7280; }
+
+body.dark-mode .semester-tab {
+    background: #1e2a20 !important;
+    border-color: #2e3e30 !important;
+    color: #9ca3af !important;
+}
+
+body.dark-mode .semester-tab:hover {
+    border-color: #2d5f3f !important;
+    color: #4ade80 !important;
+}
+
+body.dark-mode .semester-tab.active {
+    background: #1a4d2e !important;
+    border-color: #1a4d2e !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .curriculum-tab {
+    background: #1e2a20;
+    color: #9ca3af;
+}
+
+body.dark-mode .curriculum-tab:hover { background: #263228; }
+
+body.dark-mode .curriculum-tab.active {
+    background: #192219;
+    color: #f3f4f6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .curriculum-count { color: #6b7280; }
+
+body.dark-mode .rm-tabs { background: #1e2a20; border-color: #263228; }
+body.dark-mode .rm-tab { color: #9ca3af; }
+body.dark-mode .rm-tab.active { color: #4ade80; border-bottom-color: #4ade80; }
+
+body.dark-mode .records-tabs { border-bottom-color: #263228; }
+body.dark-mode .records-tab { background: #192219; border-color: #2e3e30; color: #9ca3af; }
+body.dark-mode .records-tab.active { color: #4ade80; border-bottom-color: #4ade80; background: #1e3a22; }
+
+body.dark-mode .enrollment-settings-page .tab-button {
+    background: #1e2a20 !important;
+    border-color: #2e3e30 !important;
+    color: #d1d5db !important;
+}
+
+body.dark-mode .enrollment-settings-page .tab-button:hover {
+    background: #263228 !important;
+}
+
+body.dark-mode .enrollment-settings-page .tab-button.active {
+    background: #1e3a22 !important;
+    color: #4ade80 !important;
+    border-color: #2d5f3f !important;
+}
+
+/* -- Status & type badges ------------------------- */
+body.dark-mode .status-active,
+body.dark-mode .status-badge.enrolled,
+body.dark-mode .status-badge.approved,
+body.dark-mode .finance-fully-paid,
+body.dark-mode .status-regular {
+    background: #1e3a22 !important;
+    color: #4ade80 !important;
+}
+
+body.dark-mode .status-inactive,
+body.dark-mode .status-badge.pre-registered,
+body.dark-mode .finance-promisory,
+body.dark-mode .status-irregular,
+body.dark-mode .assignment-status-pill.pending,
+body.dark-mode .window-chip.window-upcoming {
+    background: #3a2a00 !important;
+    color: #fbbf24 !important;
+}
+
+body.dark-mode .status-dropped,
+body.dark-mode .status-badge.rejected,
+body.dark-mode .window-chip.window-closed {
+    background: #3a1212 !important;
+    color: #f87171 !important;
+}
+
+body.dark-mode .status-graduated,
+body.dark-mode .enrollee-type-pill.returning {
+    background: #1e2e4a !important;
+    color: #93c5fd !important;
+}
+
+body.dark-mode .finance-down-payment {
+    background: #3a1e0a !important;
+    color: #fb923c !important;
+}
+
+body.dark-mode .assignment-status-pill.completed,
+body.dark-mode .window-chip.window-open,
+body.dark-mode .curriculum-pill.ready {
+    background: #1e3a22 !important;
+    color: #4ade80 !important;
+}
+
+body.dark-mode .window-chip.window-no_window {
+    background: #263228 !important;
+    color: #9ca3af !important;
+}
+
+body.dark-mode .enrollee-type-pill.new,
+body.dark-mode .curriculum-pill.empty { background: #1e2e1e !important; color: #86efac !important; }
+
+body.dark-mode .curriculum-chip { background: #1e3a22; color: #4ade80; }
+body.dark-mode .curriculum-chip.muted { background: #1e2a20; color: #9ca3af; }
+
+body.dark-mode .rm-role-card-badge,
+body.dark-mode .rm-user-role-badge { background: #1e3a22; color: #4ade80; }
+
+body.dark-mode .badge { background: #1e2e4a; color: #93c5fd; }
+
+body.dark-mode .tags span { background: #1e2a20; color: #d1d5db; }
+
+/* -- Action buttons ------------------------------- */
+body.dark-mode .edit-btn { color: #60a5fa; background: #1e2e4a; }
+body.dark-mode .edit-btn:hover { background: #1e3560; }
+body.dark-mode .view-btn { color: #34d399; background: #1e3a2a; }
+body.dark-mode .view-btn:hover { background: #1a4d2e; }
+body.dark-mode .drop-btn { color: #f87171; background: #3a1212; }
+body.dark-mode .drop-btn:hover { background: #4a1818; }
+body.dark-mode .restore-btn { color: #c084fc; background: #2e1a3a; }
+body.dark-mode .restore-btn:hover { background: #3a2050; }
+
+body.dark-mode .btn-action {
+    background: #1e2a20;
+    border-color: #2e3e30;
+    color: #9ca3af;
+}
+
+body.dark-mode .btn-action:hover { background: #263228; border-color: #4a4a4a; }
+body.dark-mode .btn-action.view { color: #60a5fa; }
+body.dark-mode .btn-action.view:hover { background: #1e2e4a; border-color: #60a5fa; }
+body.dark-mode .btn-action.edit { color: #34d399; }
+body.dark-mode .btn-action.edit:hover { background: #1e3a2a; border-color: #34d399; }
+body.dark-mode .btn-action.delete { color: #f87171; }
+body.dark-mode .btn-action.delete:hover { background: #3a1212; border-color: #f87171; }
+body.dark-mode .btn-action.approve { color: #4ade80; background: #1e3a22; border-color: #2d5f3f; }
+body.dark-mode .btn-action.approve:hover { background: #254d2c; }
+
+/* -- Secondary & utility buttons ----------------- */
+body.dark-mode .btn-secondary {
+    background: #1e2a20 !important;
+    color: #d1d5db !important;
+    border-color: #2e3e30 !important;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #263228 !important;
+    border-color: #4a4a4a !important;
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .records-btn-secondary { background: #1e2a20 !important; color: #d1d5db !important; }
+body.dark-mode .records-btn-secondary:hover { background: #263228 !important; }
+
+body.dark-mode .rm-role-card-action {
+    background: #1e2a20;
+    color: #d1d5db;
+    border-color: #2e3e30;
+}
+
+/* -- Pagination ----------------------------------- */
+body.dark-mode .pagination-btn,
+body.dark-mode .pagination-nav-btn,
+body.dark-mode .pagination-page,
+body.dark-mode .student-pagination-btn,
+body.dark-mode .student-page-number,
+body.dark-mode .rm-users-page-btn {
+    background: #1e2a20 !important;
+    border-color: #2e3e30 !important;
+    color: #d1d5db !important;
+}
+
+body.dark-mode .pagination-btn:hover:not(:disabled),
+body.dark-mode .pagination-nav-btn:hover:not(:disabled),
+body.dark-mode .pagination-page:hover,
+body.dark-mode .student-page-number:hover {
+    background: #263228 !important;
+    border-color: #4a4a4a !important;
+    color: #f3f4f6 !important;
+}
+
+body.dark-mode .pagination-page.active,
+body.dark-mode .student-page-number.active {
+    background: #1a4d2e !important;
+    border-color: #1a4d2e !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .pagination-container {
+    border-top-color: #263228;
+}
+
+/* -- Records page --------------------------------- */
+body.dark-mode .records-toolbar,
+body.dark-mode .records-table-wrap { background: #192219; border-color: #263228; }
+
+body.dark-mode .records-page-note { background: #1e3a22; border-color: #2d5f3f; color: #86efac; }
+
+body.dark-mode .records-flash.success { background: #1e3a22; border-color: #2d5f3f; color: #86efac; }
+body.dark-mode .records-flash.error { background: #3a1212; border-color: #7f1d1d; color: #f87171; }
+
+/* -- Settings page -------------------------------- */
+body.dark-mode .settings-card { border-color: #263228; }
+body.dark-mode .settings-card:hover { border-color: #2d5f3f; box-shadow: 0 14px 32px rgba(0,0,0,0.5) !important; }
+body.dark-mode .settings-content h3 { color: #f3f4f6 !important; }
+body.dark-mode .settings-content p { color: #9ca3af !important; }
+body.dark-mode .settings-arrow { color: #4b5563; }
+body.dark-mode .backup-section { border-bottom-color: #263228; }
+body.dark-mode .backup-item { background: #1e2a20; border-color: #263228; }
+body.dark-mode .backup-date { color: #9ca3af; }
+body.dark-mode .no-reports { background: #1e2a20; border-color: #2e3e30; color: #9ca3af; }
+
+/* -- Notification panel --------------------------- */
+body.dark-mode .notification-panel { border-color: #263228 !important; }
+body.dark-mode .report-item { background: #1e2a20 !important; border-color: #263228 !important; }
+body.dark-mode .report-summary h4 { color: #f3f4f6; }
+body.dark-mode .report-meta { color: #9ca3af; }
+body.dark-mode .report-details { color: #d1d5db; }
+
+/* -- Profile page --------------------------------- */
+body.dark-mode .profile-avatar-fallback { background: #1e3a22; color: #4ade80; }
+body.dark-mode .profile-avatar-edit { background: #1e2a20; }
+body.dark-mode .profile-section-block:last-of-type { border-bottom: none; }
+body.dark-mode .danger-zone { background: #3a1212; border-color: #7f1d1d; }
+
+/* -- Course page ---------------------------------- */
+body.dark-mode .course-card:hover { background: #1e2a20 !important; border-color: #2e3e30 !important; }
+body.dark-mode .course-card.active { background: #1e2e4a !important; border-color: #60a5fa !important; }
+body.dark-mode .course-card h3 { color: #f3f4f6; }
+body.dark-mode .course-card p { color: #9ca3af; }
+body.dark-mode .course-card .students { color: #9ca3af; }
+
+/* -- Curriculum page ------------------------------ */
+body.dark-mode .curriculum-page-note { background: #1e3a22; border-color: #2d5f3f; color: #86efac; }
+body.dark-mode .course-tabs-section { border-color: #263228 !important; }
+
+/* -- Enrollment / Enrollees pages ----------------- */
+body.dark-mode .enrollment-header { border-color: #263228 !important; }
+body.dark-mode .enrollment-stat-card { border-color: #263228 !important; }
+body.dark-mode .students-header { border-bottom-color: #263228; }
+
+body.dark-mode .course-section { border-color: #263228; }
+body.dark-mode .course-header { background: #1e2a20; border-bottom-color: #263228; }
+body.dark-mode .course-title { color: #f3f4f6; }
+body.dark-mode .course-count { background: #263228; color: #9ca3af; }
+body.dark-mode .student-card { background: #192219; border-color: #263228; }
+body.dark-mode .student-card:hover { border-color: #2e3e30; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+body.dark-mode .student-name { color: #f3f4f6; }
+body.dark-mode .student-id, body.dark-mode .student-email, body.dark-mode .student-year { color: #9ca3af; }
+
+body.dark-mode .window-blocked { color: #f87171; }
+body.dark-mode .account-flag { color: #fbbf24; }
+
+/* -- Role Management ------------------------------ */
+body.dark-mode .rm-role-card { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+body.dark-mode .rm-role-card-stat-label { color: #9ca3af; }
+body.dark-mode .rm-role-card-stat-value { color: #f3f4f6; }
+body.dark-mode .rm-user-item { border-color: #263228; }
+body.dark-mode .rm-user-name { color: #f3f4f6; }
+body.dark-mode .rm-permission-module { color: #d1d5db; }
+body.dark-mode .rm-empty-state { color: #9ca3af; }
+body.dark-mode .rm-loading { color: #9ca3af; }
+body.dark-mode .rm-profile-value { color: #d1d5db; }
+
+/* -- Dashboard activity --------------------------- */
+body.dark-mode .curriculum-summary-item,
+body.dark-mode .curriculum-program-item,
+body.dark-mode .dashboard-metric-row {
+    background: #1e2a20;
+    border-color: #263228;
+}
+
+body.dark-mode .curriculum-summary-item strong,
+body.dark-mode .curriculum-program-item strong,
+body.dark-mode .dashboard-metric-row strong { color: #f3f4f6; }
+
+body.dark-mode .curriculum-summary-label,
+body.dark-mode .curriculum-program-meta,
+body.dark-mode .dashboard-metric-row span { color: #9ca3af; }
+
+body.dark-mode .dashboard-action-link { background: #1e3a22; border-color: #2d5f3f; color: #4ade80; }
+body.dark-mode .dashboard-action-link:hover { background: #254d2c; }
+body.dark-mode .activity-item:hover { background-color: #1e2a20; }
+body.dark-mode .activity-icon { background-color: #1e2a20; color: #4ade80; }
+body.dark-mode .activity-text { color: #d1d5db; }
+body.dark-mode .activity-time { color: #6b7280; }
+body.dark-mode .profile-name { color: #f3f4f6; }
+
+/* -- User dropdown -------------------------------- */
+body.dark-mode .user-dropdown { border: 1px solid #263228; }
+body.dark-mode .dropdown-item.logout:hover { background-color: #3b1212; }
+
+/* -- Enrollment settings notifications ----------- */
+body.dark-mode .notification.success { background: #1e3a22 !important; color: #86efac !important; border-left-color: #2d5f3f !important; }
+body.dark-mode .notification.error   { background: #3a1212 !important; color: #f87171 !important; border-left-color: #7f1d1d !important; }
+body.dark-mode .notification.info    { background: #1e2e4a !important; color: #93c5fd !important; border-left-color: #2563eb !important; }
+
+/* -- Misc ----------------------------------------- */
+body.dark-mode .stat-change.positive { color: #4ade80; }
+body.dark-mode .records-flash { box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+body.dark-mode hr { border-color: #263228; }
+
