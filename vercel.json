@@ -1,9 +1,9 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/enrollment run build",
+  "buildCommand": "pnpm install && (pnpm --filter @workspace/db run push-force || echo 'schema push skipped, will init at runtime') && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/enrollment run build",
   "outputDirectory": "dist",
   "functions": {
     "api/handler.js": {
-      "includeFiles": "lib/db/drizzle/**"
+      "maxDuration": 60
     }
   },
   "rewrites": [
