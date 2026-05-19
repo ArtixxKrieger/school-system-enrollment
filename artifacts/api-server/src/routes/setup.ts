@@ -1,11 +1,9 @@
 import { Router } from "express";
-import pg from "pg";
 import bcrypt from "bcryptjs";
-import { db, usersTable, enrollmentSettingsTable } from "@workspace/db";
+import { db, pool, usersTable, enrollmentSettingsTable } from "@workspace/db";
 import { count, eq } from "drizzle-orm";
 
 const router = Router();
-const { Pool } = pg;
 
 // Inlined migration SQL — keeps the serverless function self-contained
 const MIGRATION_STATEMENTS = [
@@ -190,18 +188,6 @@ const MIGRATION_STATEMENTS = [
 
 router.get("/api/setup", async (req, res) => {
   try {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      return res.status(500).json({ error: "DATABASE_URL not set" });
-    }
-
-    const pool = new Pool({
-      connectionString,
-      ssl: connectionString.includes("supabase.co")
-        ? { rejectUnauthorized: false }
-        : undefined,
-    });
-
     let created = 0;
     let skipped = 0;
     for (const statement of MIGRATION_STATEMENTS) {
@@ -216,12 +202,10 @@ router.get("/api/setup", async (req, res) => {
         ) {
           skipped++;
         } else {
-          await pool.end();
           return res.status(500).json({ error: err.message, statement: statement.slice(0, 80) });
         }
       }
     }
-    await pool.end();
 
     // Seed admin user
     const [{ value: adminCount }] = await db
