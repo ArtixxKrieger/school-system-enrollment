@@ -1,45 +1,37 @@
-import { createRequire } from "module";
-import path from "path";
-import { fileURLToPath } from "url";
+'use strict';
+const path = require('path');
 
-const _require = createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Use path.join with individual segments so Vercel's bundler cannot
-// statically resolve and inline the CJS bundle at build time.
-// The file is included at runtime via vercel.json includeFiles.
-const APP_BUNDLE = path.join(
-  __dirname,
-  "..",
-  "artifacts",
-  "api-server",
-  "dist",
-  "app.cjs"
-);
+// process.cwd() is always /var/task in Vercel Lambda.
+// includeFiles in vercel.json ensures app.cjs is present at this path.
+const APP_BUNDLE = path.join(process.cwd(), 'artifacts', 'api-server', 'dist', 'app.cjs');
 
 let app, migrationReady, loadError;
 try {
-  const mod = _require(APP_BUNDLE);
+  const mod = require(APP_BUNDLE);
   app = mod.default ?? mod;
   migrationReady = mod.migrationReady;
 } catch (err) {
   loadError = err;
-  console.error("[handler] load error:", err.message, "\n", err.stack);
+  console.error('[handler] load error:', err.message);
+  console.error('[handler] attempted path:', APP_BUNDLE);
+  console.error('[handler] cwd:', process.cwd());
+  console.error(err.stack);
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (loadError) {
-    res.status(500).json({
+    return res.status(500).json({
       error: loadError.message,
       cause: loadError.code,
-      trace: loadError.stack?.split("\n").slice(0, 10),
+      attemptedPath: APP_BUNDLE,
+      cwd: process.cwd(),
+      trace: loadError.stack ? loadError.stack.split('\n').slice(0, 10) : [],
     });
-    return;
   }
   try {
     if (migrationReady) await migrationReady;
   } catch (err) {
-    console.error("[handler] migration error:", err.message);
+    console.error('[handler] migration error:', err.message);
   }
   return app(req, res);
-}
+};
