@@ -1,7 +1,8 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/enrollment run build",
+  "buildCommand": "pnpm install && pnpm --filter @workspace/db run push && pnpm --filter @workspace/scripts run seed && pnpm --filter @workspace/enrollment run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "/api/handler" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
