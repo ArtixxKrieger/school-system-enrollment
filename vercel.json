@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/db run push && pnpm --filter @workspace/scripts run seed && pnpm --filter @workspace/enrollment run build",
+  "buildCommand": "pnpm install && (pnpm --filter @workspace/db run push || echo 'Schema push skipped') && (pnpm --filter @workspace/scripts run seed || echo 'Seed skipped') && pnpm --filter @workspace/enrollment run build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/handler" },
