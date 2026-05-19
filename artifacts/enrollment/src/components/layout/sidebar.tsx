@@ -63,6 +63,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Settings", href: "/settings" },
       { label: "Role Management", href: "/role-management" },
+      { label: "Vouchers", href: "/vouchers" },
     ],
   },
 ];

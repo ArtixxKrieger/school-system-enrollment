@@ -656,6 +656,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/ActivityLogListResponse"
 
+  /vouchers:
+    get:
+      operationId: listVouchers
+      tags: [vouchers]
+      summary: List all vouchers (admin only)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: List of vouchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Voucher"
+    post:
+      operationId: generateVouchers
+      tags: [vouchers]
+      summary: Generate voucher codes (admin only)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateVouchersInput"
+      responses:
+        "201":
+          description: Generated vouchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Voucher"
+
+  /vouchers/validate:
+    post:
+      operationId: validateVoucher
+      tags: [vouchers]
+      summary: Validate a voucher code (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateVoucherInput"
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoucherValidationResult"
+
+  /vouchers/{id}:
+    delete:
+      operationId: deleteVoucher
+      tags: [vouchers]
+      summary: Delete/revoke a voucher (admin only)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+
   /profile:
     get:
       operationId: getProfile
@@ -1004,7 +1074,7 @@ components:
 
     EnrolleeInput:
       type: object
-      required: [firstName, lastName, email, courseId, yearLevel]
+      required: [firstName, lastName, email, courseId, yearLevel, voucherCode]
       properties:
         firstName:
           type: string
@@ -1033,6 +1103,59 @@ components:
         enrollmentType:
           type: string
         password:
+          type: string
+        voucherCode:
+          type: string
+
+    Voucher:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        isUsed:
+          type: boolean
+        usedBy:
+          type: ["integer", "null"]
+        createdBy:
+          type: ["integer", "null"]
+        createdByName:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        expiresAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, code, isUsed, createdAt]
+
+    GenerateVouchersInput:
+      type: object
+      properties:
+        count:
+          type: integer
+        notes:
+          type: string
+        expiresAt:
+          type: string
+
+    ValidateVoucherInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+
+    VoucherValidationResult:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
+        voucherId:
+          type: integer
+        error:
           type: string
 
     EnrolleeStats:

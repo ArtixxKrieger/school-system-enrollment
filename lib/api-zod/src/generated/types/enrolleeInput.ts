@@ -21,4 +21,5 @@ export interface EnrolleeInput {
   yearLevel: number;
   enrollmentType?: string;
   password?: string;
+  voucherCode: string;
 }

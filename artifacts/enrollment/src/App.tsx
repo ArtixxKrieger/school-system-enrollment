@@ -16,6 +16,7 @@ import CurriculumPage from "@/pages/curriculum";
 import SettingsPage from "@/pages/settings";
 import RoleManagementPage from "@/pages/role-management";
 import ProfilePage from "@/pages/profile";
+import VouchersPage from "@/pages/vouchers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,9 @@ function Router() {
       </Route>
       <Route path="/role-management">
         <ProtectedRoute component={RoleManagementPage} />
+      </Route>
+      <Route path="/vouchers">
+        <ProtectedRoute component={VouchersPage} />
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={ProfilePage} />

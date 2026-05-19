@@ -20,6 +20,7 @@ export default function PreRegisterPage() {
     courseId: 0, yearLevel: 1, enrollmentType: "new",
   });
   const [password, setPassword] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,10 +32,11 @@ export default function PreRegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.courseId) { setError("Please select a course"); return; }
+    if (!voucherCode.trim()) { setError("A voucher code is required to pre-register"); return; }
     setError("");
     setSubmitting(true);
     try {
-      await createEnrollee.mutateAsync({ data: { ...form, password } as any });
+      await createEnrollee.mutateAsync({ data: { ...form, password, voucherCode: voucherCode.trim().toUpperCase() } as any });
       setSuccess(true);
     } catch (err: any) {
       setError(err?.data?.error ?? err?.message ?? "Failed to submit application");
@@ -162,6 +164,22 @@ export default function PreRegisterPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 pb-1 border-b">Voucher Code</h3>
+                  <div>
+                    <Label>Registration Voucher Code <span className="text-red-500">*</span></Label>
+                    <Input
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                      placeholder="XXXX-XXXX-XXXX"
+                      className="font-mono tracking-widest uppercase"
+                      required
+                      data-testid="input-prereg-voucherCode"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Enter the voucher code provided by the school registrar</p>
                   </div>
                 </div>
 

@@ -212,6 +212,40 @@ export interface EnrolleeInput {
   yearLevel: number;
   enrollmentType?: string;
   password?: string;
+  voucherCode: string;
+}
+
+export interface Voucher {
+  id: number;
+  code: string;
+  isUsed: boolean;
+  /** @nullable */
+  usedBy?: number | null;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  createdByName?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
+  createdAt: string;
+}
+
+export interface GenerateVouchersInput {
+  count?: number;
+  notes?: string;
+  expiresAt?: string;
+}
+
+export interface ValidateVoucherInput {
+  code: string;
+}
+
+export interface VoucherValidationResult {
+  valid: boolean;
+  voucherId?: number;
+  error?: string;
 }
 
 export interface EnrolleeStats {

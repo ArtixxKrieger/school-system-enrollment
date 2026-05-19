@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, enrolleesTable, studentsTable, coursesTable, activityLogsTable, usersTable } from "@workspace/db";
+import { db, enrolleesTable, studentsTable, coursesTable, activityLogsTable, usersTable, vouchersTable } from "@workspace/db";
 import { eq, ilike, or, and, sql, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import {
@@ -79,7 +79,30 @@ router.post("/enrollees", async (req, res) => {
     return;
   }
   try {
-    const { password, ...rest } = parsed.data as typeof parsed.data & { password?: string };
+    const { password, voucherCode, ...rest } = parsed.data as typeof parsed.data & { password?: string; voucherCode?: string };
+
+    if (!voucherCode) {
+      res.status(400).json({ error: "A valid voucher code is required to pre-register" });
+      return;
+    }
+
+    const voucher = await db.query.vouchersTable.findFirst({
+      where: eq(vouchersTable.code, voucherCode.trim().toUpperCase()),
+    });
+
+    if (!voucher) {
+      res.status(400).json({ error: "Invalid voucher code" });
+      return;
+    }
+    if (voucher.isUsed) {
+      res.status(400).json({ error: "Voucher has already been used" });
+      return;
+    }
+    if (voucher.expiresAt && new Date() > voucher.expiresAt) {
+      res.status(400).json({ error: "Voucher has expired" });
+      return;
+    }
+
     const passwordHash = password ? await bcrypt.hash(password, 10) : null;
     const preRegNumber = generatePreRegNumber();
 
@@ -87,6 +110,11 @@ router.post("/enrollees", async (req, res) => {
       .insert(enrolleesTable)
       .values({ ...rest, preRegNumber, passwordHash: passwordHash ?? undefined })
       .returning();
+
+    await db
+      .update(vouchersTable)
+      .set({ isUsed: true, usedBy: enrollee.id })
+      .where(eq(vouchersTable.id, voucher.id));
 
     res.status(201).json(enrollee);
   } catch (err: any) {

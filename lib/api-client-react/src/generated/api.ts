@@ -38,6 +38,7 @@ import type {
   EnrolleeListResponse,
   EnrolleeStats,
   EnrollmentSettings,
+  GenerateVouchersInput,
   HealthStatus,
   ListActivityLogsParams,
   ListCurriculumParams,
@@ -58,7 +59,10 @@ import type {
   StudentUpdate,
   User,
   UserInput,
-  UserUpdate
+  UserUpdate,
+  ValidateVoucherInput,
+  Voucher,
+  VoucherValidationResult
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -2673,6 +2677,295 @@ export function useListActivityLogs<TData = Awaited<ReturnType<typeof listActivi
 
 
 
+
+export const getListVouchersUrl = () => {
+
+
+
+
+  return `/api/vouchers`
+}
+
+/**
+ * @summary List all vouchers (admin only)
+ */
+export const listVouchers = async ( options?: RequestInit): Promise<Voucher[]> => {
+
+  return customFetch<Voucher[]>(getListVouchersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVouchersQueryKey = () => {
+    return [
+    `/api/vouchers`
+    ] as const;
+    }
+
+
+export const getListVouchersQueryOptions = <TData = Awaited<ReturnType<typeof listVouchers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVouchersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVouchers>>> = ({ signal }) => listVouchers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVouchers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVouchersQueryResult = NonNullable<Awaited<ReturnType<typeof listVouchers>>>
+export type ListVouchersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all vouchers (admin only)
+ */
+
+export function useListVouchers<TData = Awaited<ReturnType<typeof listVouchers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVouchersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGenerateVouchersUrl = () => {
+
+
+
+
+  return `/api/vouchers`
+}
+
+/**
+ * @summary Generate voucher codes (admin only)
+ */
+export const generateVouchers = async (generateVouchersInput: GenerateVouchersInput, options?: RequestInit): Promise<Voucher[]> => {
+
+  return customFetch<Voucher[]>(getGenerateVouchersUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      generateVouchersInput,)
+  }
+);}
+
+
+
+
+export const getGenerateVouchersMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateVouchers>>, TError,{data: BodyType<GenerateVouchersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateVouchers>>, TError,{data: BodyType<GenerateVouchersInput>}, TContext> => {
+
+const mutationKey = ['generateVouchers'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateVouchers>>, {data: BodyType<GenerateVouchersInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateVouchers(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateVouchersMutationResult = NonNullable<Awaited<ReturnType<typeof generateVouchers>>>
+    export type GenerateVouchersMutationBody = BodyType<GenerateVouchersInput>
+    export type GenerateVouchersMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate voucher codes (admin only)
+ */
+export const useGenerateVouchers = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateVouchers>>, TError,{data: BodyType<GenerateVouchersInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateVouchers>>,
+        TError,
+        {data: BodyType<GenerateVouchersInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateVouchersMutationOptions(options));
+    }
+
+export const getValidateVoucherUrl = () => {
+
+
+
+
+  return `/api/vouchers/validate`
+}
+
+/**
+ * @summary Validate a voucher code (public)
+ */
+export const validateVoucher = async (validateVoucherInput: ValidateVoucherInput, options?: RequestInit): Promise<VoucherValidationResult> => {
+
+  return customFetch<VoucherValidationResult>(getValidateVoucherUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      validateVoucherInput,)
+  }
+);}
+
+
+
+
+export const getValidateVoucherMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateVoucher>>, TError,{data: BodyType<ValidateVoucherInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof validateVoucher>>, TError,{data: BodyType<ValidateVoucherInput>}, TContext> => {
+
+const mutationKey = ['validateVoucher'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateVoucher>>, {data: BodyType<ValidateVoucherInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  validateVoucher(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ValidateVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof validateVoucher>>>
+    export type ValidateVoucherMutationBody = BodyType<ValidateVoucherInput>
+    export type ValidateVoucherMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Validate a voucher code (public)
+ */
+export const useValidateVoucher = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateVoucher>>, TError,{data: BodyType<ValidateVoucherInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof validateVoucher>>,
+        TError,
+        {data: BodyType<ValidateVoucherInput>},
+        TContext
+      > => {
+      return useMutation(getValidateVoucherMutationOptions(options));
+    }
+
+export const getDeleteVoucherUrl = (id: number,) => {
+
+
+
+
+  return `/api/vouchers/${id}`
+}
+
+/**
+ * @summary Delete/revoke a voucher (admin only)
+ */
+export const deleteVoucher = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteVoucherUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVoucherMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVoucher>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVoucher>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteVoucher'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVoucher>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteVoucher(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVoucher>>>
+
+    export type DeleteVoucherMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete/revoke a voucher (admin only)
+ */
+export const useDeleteVoucher = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVoucher>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVoucher>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVoucherMutationOptions(options));
+    }
 
 export const getGetProfileUrl = () => {
 

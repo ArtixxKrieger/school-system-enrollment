@@ -331,7 +331,8 @@ export const CreateEnrolleeBody = zod.object({
   "courseId": zod.number(),
   "yearLevel": zod.number(),
   "enrollmentType": zod.string().optional(),
-  "password": zod.string().optional()
+  "password": zod.string().optional(),
+  "voucherCode": zod.string()
 })
 
 
@@ -697,6 +698,55 @@ export const ListActivityLogsResponse = zod.object({
   "total": zod.number(),
   "page": zod.number(),
   "totalPages": zod.number()
+})
+
+
+/**
+ * @summary List all vouchers (admin only)
+ */
+export const ListVouchersResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "isUsed": zod.boolean(),
+  "usedBy": zod.number().nullish(),
+  "createdBy": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "expiresAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListVouchersResponse = zod.array(ListVouchersResponseItem)
+
+
+/**
+ * @summary Generate voucher codes (admin only)
+ */
+export const GenerateVouchersBody = zod.object({
+  "count": zod.number().optional(),
+  "notes": zod.string().optional(),
+  "expiresAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Validate a voucher code (public)
+ */
+export const ValidateVoucherBody = zod.object({
+  "code": zod.string()
+})
+
+export const ValidateVoucherResponse = zod.object({
+  "valid": zod.boolean(),
+  "voucherId": zod.number().optional(),
+  "error": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete/revoke a voucher (admin only)
+ */
+export const DeleteVoucherParams = zod.object({
+  "id": zod.coerce.number()
 })
 
 
