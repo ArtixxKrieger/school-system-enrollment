@@ -2,7 +2,6 @@ import express, { type Express } from "express";
 import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import pinoHttp from "pino-http";
 import bcryptjs from "bcryptjs";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -205,26 +204,6 @@ export const migrationReady: Promise<void> = (async () => {
     logger.error({ err: err.message }, "DB init error");
   }
 })();
-
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
-      },
-      res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
-      },
-    },
-  }),
-);
 
 app.use(
   cors({
