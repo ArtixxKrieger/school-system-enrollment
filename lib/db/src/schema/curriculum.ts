@@ -1,8 +1,8 @@
 import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { coursesTable } from "./courses";
-import { usersTable } from "./users";
+import { coursesTable } from "./courses.js";
+import { usersTable } from "./users.js";
 
 export const curriculumTable = pgTable("curriculum", {
   id: serial("id").primaryKey(),
