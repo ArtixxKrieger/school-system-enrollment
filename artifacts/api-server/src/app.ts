@@ -3,13 +3,41 @@ import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import pinoHttp from "pino-http";
+import path from "node:path";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import bcryptjs from "bcryptjs";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { pool } from "@workspace/db";
+import { pool, db } from "@workspace/db";
 
 const PgSession = connectPgSimple(session);
 
 const app: Express = express();
+
+// Run migrations on cold start — safe to run every time, drizzle tracks what's applied
+export const migrationReady: Promise<void> = (async () => {
+  try {
+    const migrationsFolder = path.join(__dirname, "../../../lib/db/drizzle");
+    await migrate(db, { migrationsFolder });
+    logger.info("Migrations applied");
+
+    const result = await pool.query(
+      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+    );
+    if (result.rows.length === 0) {
+      const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
+      const hashed = await bcryptjs.hash(password, 12);
+      await pool.query(
+        `INSERT INTO users (username, password, email, full_name, role, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
+      );
+      logger.info("Admin account created — change password after first login");
+    }
+  } catch (err: any) {
+    logger.error({ err: err.message }, "Migration error");
+  }
+})();
 
 app.use(
   pinoHttp({
