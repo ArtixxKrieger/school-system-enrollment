@@ -1,19 +1,22 @@
-import app from "../artifacts/api-server/dist/app.mjs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import fs from "node:fs";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const { Pool } = require("pg");
+const { drizzle } = require("drizzle-orm/node-postgres");
+const { migrate } = require("drizzle-orm/node-postgres/migrator");
 const bcryptjs = require("bcryptjs");
 
-let initialized = false;
+const MIGRATIONS_FOLDER = path.join(__dirname, "../lib/db/drizzle");
 
-async function init() {
-  if (initialized || !process.env.DATABASE_URL) return;
+const initPromise = (async () => {
+  if (!process.env.DATABASE_URL) {
+    console.error("[handler] DATABASE_URL is not set — skipping DB init");
+    return;
+  }
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -22,25 +25,17 @@ async function init() {
   });
 
   try {
-    const { rows } = await pool.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'users'
-      ) AS exists
-    `);
+    const db = drizzle(pool);
 
-    if (!rows[0].exists) {
-      const sqlPath = path.join(__dirname, "../lib/db/drizzle/0000_init.sql");
-      const sql = fs.readFileSync(sqlPath, "utf8")
-        .replace(/--> statement-breakpoint\n/g, "\n");
-      await pool.query(sql);
-      console.log("[handler] Schema created");
-    }
+    // Applies any pending migrations — idempotent, safe to run every cold start
+    await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    console.log("[handler] Migrations applied");
 
-    const { rows: admins } = await pool.query(
+    // Seed admin account on first deploy
+    const { rows } = await pool.query(
       "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
     );
-    if (admins.length === 0) {
+    if (rows.length === 0) {
       const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
       const hashed = await bcryptjs.hash(password, 12);
       await pool.query(
@@ -48,18 +43,16 @@ async function init() {
          VALUES ($1, $2, $3, $4, $5, $6)`,
         ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
       );
-      console.log("[handler] Admin account created — change the password after first login");
+      console.log("[handler] Admin account created (default password: Admin@123)");
     }
   } catch (err) {
     console.error("[handler] Init error:", err.message);
   } finally {
     await pool.end();
   }
+})();
 
-  initialized = true;
-}
-
-const initPromise = init();
+import app from "../artifacts/api-server/dist/app.mjs";
 
 export default async function handler(req, res) {
   await initPromise;
