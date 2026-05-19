@@ -5,16 +5,18 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "migrate": "tsx ./src/migrate.ts",
     "seed": "tsx ./src/seed.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "catalog:",
-    "tsx": "catalog:"
-  },
   "dependencies": {
     "@workspace/db": "workspace:*",
-    "bcryptjs": "^3.0.3"
+    "bcryptjs": "^3.0.3",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "catalog:",
+    "tsx": "catalog:"
   }
 }
