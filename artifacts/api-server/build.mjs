@@ -1,7 +1,11 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
+import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm } from "node:fs/promises";
+
+globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,13 +20,16 @@ async function buildAll() {
     ],
     platform: "node",
     bundle: true,
-    packages: "external",
     format: "cjs",
     outdir: distDir,
     outExtension: { ".js": ".cjs" },
     logLevel: "info",
     sourcemap: "linked",
-    tsconfig: path.resolve(artifactDir, "tsconfig.json"),
+    // Only externalize truly unbundleable native modules
+    external: ["*.node", "pg-native", "bcrypt"],
+    plugins: [
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
+    ],
   });
 }
 
