@@ -2,7 +2,9 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "types": ["node"],
-    "noImplicitAny": false
+    "noEmitOnError": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true
   },
   "include": ["*.ts"]
 }
