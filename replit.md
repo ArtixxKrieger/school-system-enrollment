@@ -36,13 +36,38 @@ A complete school enrollment management platform for a Philippine college, rebui
 - `artifacts/enrollment/src/contexts/auth-context.tsx` — auth state + session management
 - `scripts/src/seed.ts` — database seed script
 
+## Vercel Deployment (plug-and-play)
+
+The project is fully configured for Vercel + Supabase. Just connect your GitHub repo to Vercel and set the following environment variables in the Vercel dashboard:
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Supabase PostgreSQL connection string (from Supabase → Settings → Database → Connection String → URI) |
+| `SESSION_SECRET` | Any long random string for signing session cookies (e.g. `openssl rand -hex 32`) |
+| `NODE_ENV` | Set to `production` |
+| `CORS_ORIGIN` | Your Vercel app URL e.g. `https://your-app.vercel.app` (optional, defaults to reflect request origin) |
+
+**No other config needed.** The session table is created automatically in the database on first request.
+
+Vercel build settings (auto-detected from `vercel.json`):
+- Build command: `pnpm --filter @workspace/enrollment run build`
+- Output directory: `artifacts/enrollment/dist/public`
+- API routes: `api/index.ts` (Express app as a single serverless function, handles all `/api/*`)
+
+**Supabase setup:**
+1. Create a project at supabase.com
+2. Copy the connection string from Settings → Database → URI
+3. Run the Drizzle schema push: `DATABASE_URL=<your-url> pnpm --filter @workspace/db run push`
+4. Optionally seed: `DATABASE_URL=<your-url> pnpm --filter @workspace/scripts run seed`
+
 ## Architecture decisions
 
 - Contract-first API: OpenAPI spec drives both Zod validation on the server and React Query hooks on the client — never written by hand.
 - All Zod query param schemas use `snake_case` field names (matching URL conventions); body/response schemas use `camelCase` (matching JS conventions). Routes must destructure accordingly.
-- Session auth via express-session (in-memory store for dev); `credentials: 'include'` set in custom-fetch so cookies are sent on every request.
+- Session auth via express-session with `connect-pg-simple` (PostgreSQL-backed, works in Vercel serverless); `credentials: 'include'` set in custom-fetch so cookies are sent on every request.
 - DB lib is a composite TypeScript project — run `pnpm run typecheck:libs` before typechecking artifacts or the declarations won't exist.
 - `gpa` is stored as Drizzle `numeric()` (string in DB) but exposed as `number` in the API — coerce with `String(gpa)` on update.
+- SSL is automatically enabled when `DATABASE_URL` contains `supabase` or when `NODE_ENV=production`.
 
 ## Product
 
