@@ -12,13 +12,18 @@ const workspaceRoot = path.resolve(artifactDir, "../..");
 // Native addons that can never be bundled
 const NATIVE_EXTERNALS = ["*.node", "pg-native", "bcrypt"];
 
-async function buildAll() {
+// Which build to run is controlled by the BUILD_TARGET env var:
+//   BUILD_TARGET=vercel  → only builds api/handler.js  (used by Vercel)
+//   BUILD_TARGET=dev     → only builds dist/*.cjs       (used locally)
+//   (unset)              → builds both
+const target = process.env.BUILD_TARGET;
+
+async function buildDevServer() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  // 1. Local dev server — externalize ALL node_modules, only compile TS→CJS.
-  //    Packages are already installed locally so there's no need to bundle them.
-  //    This drops dist/index.cjs and dist/app.cjs from ~2.2 MB to ~50 KB.
+  // Bundle everything (workspace + npm packages) so all deps are self-contained.
+  // Node_modules don't need to be installed next to the output file.
   await esbuild({
     entryPoints: [
       path.resolve(artifactDir, "src/index.ts"),
@@ -26,7 +31,6 @@ async function buildAll() {
     ],
     platform: "node",
     bundle: true,
-    packages: "external",          // skip ALL node_modules
     external: NATIVE_EXTERNALS,
     format: "cjs",
     outdir: distDir,
@@ -34,9 +38,11 @@ async function buildAll() {
     logLevel: "info",
     sourcemap: "linked",
   });
+}
 
-  // 2. Vercel serverless handler — must be fully self-contained (no node_modules
-  //    on Lambda), so we bundle everything and minify + tree-shake.
+async function buildVercelHandler() {
+  // Must be fully self-contained (Lambda has no node_modules).
+  // Minify + tree-shake to reduce cold-start size.
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
     platform: "node",
@@ -55,7 +61,18 @@ async function buildAll() {
   });
 }
 
-buildAll().catch((err) => {
+async function main() {
+  if (target === "vercel") {
+    await buildVercelHandler();
+  } else if (target === "dev") {
+    await buildDevServer();
+  } else {
+    await buildDevServer();
+    await buildVercelHandler();
+  }
+}
+
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

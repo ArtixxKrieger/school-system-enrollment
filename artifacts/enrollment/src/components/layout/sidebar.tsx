@@ -141,9 +141,13 @@ function NavSection({ item, collapsed }: { item: NavItem; collapsed: boolean }) 
   );
 }
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({ className, onMobileClose }: { className?: string; onMobileClose?: () => void }) {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  // On mobile the sidebar lives inside a Sheet — the X button should close
+  // the sheet rather than collapse the sidebar.
+  const isMobile = !!onMobileClose;
 
   const visibleItems = navItems.filter((item) => {
     if (!item.roles) return true;
@@ -173,11 +177,11 @@ export function Sidebar({ className }: { className?: string }) {
           </div>
         )}
         <button
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={isMobile ? onMobileClose : () => setCollapsed((v) => !v)}
           className="ml-auto text-green-200/60 hover:text-white transition-colors"
           data-testid="button-toggle-sidebar"
         >
-          {collapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
+          {!isMobile && collapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
         </button>
       </div>
 

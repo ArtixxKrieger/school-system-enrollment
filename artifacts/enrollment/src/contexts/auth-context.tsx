@@ -66,7 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    await logoutMutation.mutateAsync(undefined as any);
+    try {
+      await logoutMutation.mutateAsync(undefined as any);
+    } catch {
+      // If the API call fails (e.g. session already expired), still clear local state
+    }
     setUser(null);
     setLocation("/login");
   }

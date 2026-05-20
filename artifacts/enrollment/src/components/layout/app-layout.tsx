@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
@@ -14,10 +14,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </div>
 
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar — hide Sheet's own X button; sidebar provides its own close button */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-60 border-0">
-          <Sidebar />
+        <SheetContent
+          side="left"
+          className="p-0 w-60 border-0 [&>button]:hidden"
+        >
+          <Sidebar onMobileClose={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
