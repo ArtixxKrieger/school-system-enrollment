@@ -6,14 +6,13 @@ if (!process.env.DATABASE_URL) {
 }
 
 const dbUrl = process.env.DATABASE_URL!;
-const isSupabase = dbUrl.includes("supabase.co");
+const isSupabase = dbUrl.includes("supabase");
 
 export default defineConfig({
   schema: path.join(__dirname, "./src/schema/index.ts"),
   dialect: "postgresql",
   dbCredentials: {
-    url: isSupabase && !dbUrl.includes("sslmode")
-      ? `${dbUrl}${dbUrl.includes("?") ? "&" : "?"}sslmode=require`
-      : dbUrl,
+    url: dbUrl,
+    ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
   },
 });
