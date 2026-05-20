@@ -56961,24 +56961,20 @@ var INIT_SQL = `
   );
 `;
 var migrationReady = (async () => {
-  try {
-    await pool.query(INIT_SQL);
-    logger.info("Schema ready");
-    const { rows } = await pool.query(
-      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+  await pool.query(INIT_SQL);
+  logger.info("Schema ready");
+  const { rows } = await pool.query(
+    "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+  );
+  if (rows.length === 0) {
+    const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
+    const hashed = await bcryptjs_default.hash(password, 12);
+    await pool.query(
+      `INSERT INTO users (username, password, email, full_name, role, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
     );
-    if (rows.length === 0) {
-      const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
-      const hashed = await bcryptjs_default.hash(password, 12);
-      await pool.query(
-        `INSERT INTO users (username, password, email, full_name, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
-      );
-      logger.info("Admin account created");
-    }
-  } catch (err) {
-    logger.error({ err: err.message }, "DB init error");
+    logger.info("Admin account created");
   }
 })();
 app.use(
@@ -57016,7 +57012,12 @@ async function handler(req, res) {
   try {
     await migrationReady;
   } catch (err) {
-    console.error("[vercel] Migration error (non-fatal):", err?.message);
+    console.error("[vercel] Migration failed:", err?.message, err?.stack);
+    return res.status(500).json({
+      error: "Database migration failed",
+      detail: err?.message,
+      code: err?.code
+    });
   }
   return app_default(req, res);
 }

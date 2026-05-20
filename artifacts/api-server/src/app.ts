@@ -181,27 +181,24 @@ const INIT_SQL = `
   );
 `;
 
-// Run on every cold start — CREATE TABLE IF NOT EXISTS is fully idempotent
+// Run on every cold start — CREATE TABLE IF NOT EXISTS is fully idempotent.
+// No try/catch here — errors propagate so the handler can surface them.
 export const migrationReady: Promise<void> = (async () => {
-  try {
-    await pool.query(INIT_SQL);
-    logger.info("Schema ready");
+  await pool.query(INIT_SQL);
+  logger.info("Schema ready");
 
-    const { rows } = await pool.query(
-      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+  const { rows } = await pool.query(
+    "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+  );
+  if (rows.length === 0) {
+    const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
+    const hashed = await bcryptjs.hash(password, 12);
+    await pool.query(
+      `INSERT INTO users (username, password, email, full_name, role, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
     );
-    if (rows.length === 0) {
-      const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
-      const hashed = await bcryptjs.hash(password, 12);
-      await pool.query(
-        `INSERT INTO users (username, password, email, full_name, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
-      );
-      logger.info("Admin account created");
-    }
-  } catch (err: any) {
-    logger.error({ err: err.message }, "DB init error");
+    logger.info("Admin account created");
   }
 })();
 
