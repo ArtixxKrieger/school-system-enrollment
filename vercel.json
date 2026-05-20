@@ -3,8 +3,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/handler.js": {
-      "maxDuration": 60,
-      "includeFiles": "artifacts/api-server/dist/**"
+      "maxDuration": 60
     }
   },
   "rewrites": [

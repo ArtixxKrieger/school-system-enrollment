@@ -7,11 +7,16 @@ import { rm } from "node:fs/promises";
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+// Two levels up from artifacts/api-server → workspace root
+const workspaceRoot = path.resolve(artifactDir, "../..");
+
+const EXTERNALS = ["*.node", "pg-native", "bcrypt"];
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
+  // 1. Local dev server bundle (index + app)
   await esbuild({
     entryPoints: [
       path.resolve(artifactDir, "src/index.ts"),
@@ -24,7 +29,26 @@ async function buildAll() {
     outExtension: { ".js": ".cjs" },
     logLevel: "info",
     sourcemap: "linked",
-    external: ["*.node", "pg-native", "bcrypt"],
+    external: EXTERNALS,
+  });
+
+  // 2. Vercel serverless handler — built directly into api/handler.js
+  //    This replaces whatever placeholder is in git so Vercel gets a
+  //    fully self-contained CJS file with no dynamic requires.
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
+    platform: "node",
+    bundle: true,
+    format: "cjs",
+    outfile: path.resolve(workspaceRoot, "api/handler.js"),
+    logLevel: "info",
+    sourcemap: false,
+    external: EXTERNALS,
+    // Vercel's @vercel/node reads module.exports as the handler.
+    // esbuild CJS output sets exports.default; this footer bridges the gap.
+    footer: {
+      js: "module.exports = exports.default ?? module.exports;",
+    },
   });
 }
 
