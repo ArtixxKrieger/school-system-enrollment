@@ -8,6 +8,8 @@ export const enrollmentSettingsTable = pgTable("enrollment_settings", {
   autoCloseAccounts: text("auto_close_accounts").notNull().default("never"),
   strictEnrollmentWindows: boolean("strict_enrollment_windows").notNull().default(false),
   autoProgression: boolean("auto_progression").notNull().default(true),
+  enrollmentOpen: boolean("enrollment_open").notNull().default(true),
+  systemCloseDate: timestamp("system_close_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

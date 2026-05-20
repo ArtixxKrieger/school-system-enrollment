@@ -179,6 +179,18 @@ const INIT_SQL = `
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT "vouchers_code_unique" UNIQUE("code")
   );
+  CREATE TABLE IF NOT EXISTS "course_enrollment_schedule" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "course_id" integer NOT NULL,
+    "enrollment_start_date" timestamp with time zone NOT NULL,
+    "enrollment_end_date" timestamp with time zone NOT NULL,
+    "max_slots" integer,
+    "notes" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  );
+  ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "enrollment_open" boolean DEFAULT true NOT NULL;
+  ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "system_close_date" timestamp with time zone;
 `;
 
 // Run on every cold start — CREATE TABLE IF NOT EXISTS is fully idempotent.

@@ -13,6 +13,7 @@ import settingsRouter from "./settings";
 import activityLogsRouter from "./activity-logs";
 import profileRouter from "./profile";
 import vouchersRouter from "./vouchers";
+import recordsRouter from "./records";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(settingsRouter);
 router.use(activityLogsRouter);
 router.use(profileRouter);
 router.use(vouchersRouter);
+router.use(recordsRouter);
 
 export default router;

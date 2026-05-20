@@ -5,3 +5,4 @@ export * from "./students.js";
 export * from "./curriculum.js";
 export * from "./settings.js";
 export * from "./vouchers.js";
+export * from "./enrollment-schedule.js";
