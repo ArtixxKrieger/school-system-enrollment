@@ -9,6 +9,43 @@ import { rm } from "node:fs/promises";
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(artifactDir, "../..");
+
+const EXTERNAL = [
+  "*.node", "sharp", "better-sqlite3", "sqlite3", "canvas", "bcrypt", "argon2",
+  "fsevents", "re2", "farmhash", "xxhash-addon", "bufferutil", "utf-8-validate",
+  "ssh2", "cpu-features", "dtrace-provider", "isolated-vm", "lightningcss",
+  "pg-native", "oracledb", "mongodb-client-encryption", "nodemailer", "handlebars",
+  "knex", "typeorm", "protobufjs", "onnxruntime-node", "@tensorflow/*",
+  "@prisma/client", "@mikro-orm/*", "@grpc/*", "@swc/*", "@aws-sdk/*", "@azure/*",
+  "@opentelemetry/*", "@google-cloud/*", "@google/*", "googleapis",
+  "firebase-admin", "@parcel/watcher", "@sentry/profiling-node", "@tree-sitter/*",
+  "aws-sdk", "classic-level", "dd-trace", "ffi-napi", "grpc", "hiredis",
+  "kerberos", "leveldown", "miniflare", "mysql2", "newrelic", "odbc", "piscina",
+  "realm", "ref-napi", "rocksdb", "sass-embedded", "sequelize", "serialport",
+  "snappy", "tinypool", "usb", "workerd", "wrangler", "zeromq",
+  "zeromq-prebuilt", "playwright", "puppeteer", "puppeteer-core", "electron",
+];
+
+const target = process.env.BUILD_TARGET;
+
+async function buildVercelHandler() {
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
+    platform: "node",
+    bundle: true,
+    format: "cjs",
+    outfile: path.resolve(workspaceRoot, "api/handler.js"),
+    logLevel: "info",
+    sourcemap: false,
+    minify: true,
+    treeShaking: true,
+    external: EXTERNAL,
+    footer: {
+      js: "module.exports = exports.default ?? module.exports;",
+    },
+  });
+}
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
@@ -120,7 +157,18 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
   });
 }
 
-buildAll().catch((err) => {
+async function main() {
+  if (target === "vercel") {
+    await buildVercelHandler();
+  } else if (target === "dev") {
+    await buildAll();
+  } else {
+    await buildAll();
+    await buildVercelHandler();
+  }
+}
+
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
