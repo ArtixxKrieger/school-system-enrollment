@@ -11,26 +11,27 @@ const PgSession = connectPgSimple(session);
 
 const app: Express = express();
 
-const INIT_SQL = `
-  CREATE TABLE IF NOT EXISTS "permission_modules" (
+// Each entry is run as a separate query so a failure pinpoints exactly which statement broke.
+const INIT_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS "permission_modules" (
     "id" serial PRIMARY KEY NOT NULL,
     "module_slug" text NOT NULL,
     "module_name" text NOT NULL,
     "description" text,
-    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT "permission_modules_module_slug_unique" UNIQUE("module_slug")
-  );
-  CREATE TABLE IF NOT EXISTS "roles" (
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "permission_modules" ADD CONSTRAINT "permission_modules_module_slug_unique" UNIQUE("module_slug"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "roles" (
     "id" serial PRIMARY KEY NOT NULL,
     "name" text NOT NULL,
     "description" text,
     "is_system" boolean DEFAULT false NOT NULL,
     "is_active" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT "roles_name_unique" UNIQUE("name")
-  );
-  CREATE TABLE IF NOT EXISTS "role_permissions" (
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "roles" ADD CONSTRAINT "roles_name_unique" UNIQUE("name"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "role_permissions" (
     "id" serial PRIMARY KEY NOT NULL,
     "role_id" integer NOT NULL,
     "permission_module_slug" text NOT NULL,
@@ -38,8 +39,8 @@ const INIT_SQL = `
     "is_allowed" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now() NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS "users" (
+  )`,
+  `CREATE TABLE IF NOT EXISTS "users" (
     "id" serial PRIMARY KEY NOT NULL,
     "username" text NOT NULL,
     "password" text NOT NULL,
@@ -56,11 +57,11 @@ const INIT_SQL = `
     "last_login" timestamp with time zone,
     "session_version" integer,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT "users_username_unique" UNIQUE("username"),
-    CONSTRAINT "users_email_unique" UNIQUE("email")
-  );
-  CREATE TABLE IF NOT EXISTS "courses" (
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_username_unique" UNIQUE("username"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_email_unique" UNIQUE("email"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "courses" (
     "id" serial PRIMARY KEY NOT NULL,
     "course_code" text NOT NULL,
     "course_name" text NOT NULL,
@@ -68,10 +69,10 @@ const INIT_SQL = `
     "is_active" boolean DEFAULT true NOT NULL,
     "display_order" integer DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT "courses_course_code_unique" UNIQUE("course_code")
-  );
-  CREATE TABLE IF NOT EXISTS "enrollees" (
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "courses" ADD CONSTRAINT "courses_course_code_unique" UNIQUE("course_code"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "enrollees" (
     "id" serial PRIMARY KEY NOT NULL,
     "pre_reg_number" text NOT NULL,
     "existing_student_id" text,
@@ -93,11 +94,11 @@ const INIT_SQL = `
     "application_date" timestamp with time zone DEFAULT now() NOT NULL,
     "approved_date" timestamp with time zone,
     "approved_by" integer,
-    "notes" text,
-    CONSTRAINT "enrollees_pre_reg_number_unique" UNIQUE("pre_reg_number"),
-    CONSTRAINT "enrollees_email_unique" UNIQUE("email")
-  );
-  CREATE TABLE IF NOT EXISTS "students" (
+    "notes" text
+  )`,
+  `DO $$ BEGIN ALTER TABLE "enrollees" ADD CONSTRAINT "enrollees_pre_reg_number_unique" UNIQUE("pre_reg_number"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "enrollees" ADD CONSTRAINT "enrollees_email_unique" UNIQUE("email"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "students" (
     "id" serial PRIMARY KEY NOT NULL,
     "student_id" text NOT NULL,
     "pre_reg_number" text,
@@ -129,11 +130,11 @@ const INIT_SQL = `
     "archive_reason" text,
     "flag_group" text,
     "is_account_active" boolean DEFAULT true NOT NULL,
-    "progression_status" text DEFAULT 'enrolled' NOT NULL,
-    CONSTRAINT "students_student_id_unique" UNIQUE("student_id"),
-    CONSTRAINT "students_email_unique" UNIQUE("email")
-  );
-  CREATE TABLE IF NOT EXISTS "curriculum" (
+    "progression_status" text DEFAULT 'enrolled' NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "students" ADD CONSTRAINT "students_student_id_unique" UNIQUE("student_id"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN ALTER TABLE "students" ADD CONSTRAINT "students_email_unique" UNIQUE("email"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "curriculum" (
     "id" serial PRIMARY KEY NOT NULL,
     "course_id" integer NOT NULL,
     "subject_code" text NOT NULL,
@@ -147,8 +148,8 @@ const INIT_SQL = `
     "is_active" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now() NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS "activity_logs" (
+  )`,
+  `CREATE TABLE IF NOT EXISTS "activity_logs" (
     "id" serial PRIMARY KEY NOT NULL,
     "user_id" integer,
     "action" text NOT NULL,
@@ -159,16 +160,18 @@ const INIT_SQL = `
     "new_value" text,
     "ip_address" text,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS "enrollment_settings" (
+  )`,
+  `CREATE TABLE IF NOT EXISTS "enrollment_settings" (
     "id" serial PRIMARY KEY NOT NULL,
     "auto_close_accounts" text DEFAULT 'never' NOT NULL,
     "strict_enrollment_windows" boolean DEFAULT false NOT NULL,
     "auto_progression" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now() NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS "vouchers" (
+  )`,
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "enrollment_open" boolean DEFAULT true NOT NULL`,
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "system_close_date" timestamp with time zone`,
+  `CREATE TABLE IF NOT EXISTS "vouchers" (
     "id" serial PRIMARY KEY NOT NULL,
     "code" text NOT NULL,
     "is_used" boolean DEFAULT false NOT NULL,
@@ -176,10 +179,10 @@ const INIT_SQL = `
     "created_by" integer,
     "notes" text,
     "expires_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT "vouchers_code_unique" UNIQUE("code")
-  );
-  CREATE TABLE IF NOT EXISTS "course_enrollment_schedule" (
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
+  `DO $$ BEGIN ALTER TABLE "vouchers" ADD CONSTRAINT "vouchers_code_unique" UNIQUE("code"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS "course_enrollment_schedule" (
     "id" serial PRIMARY KEY NOT NULL,
     "course_id" integer NOT NULL,
     "enrollment_start_date" timestamp with time zone NOT NULL,
@@ -188,15 +191,14 @@ const INIT_SQL = `
     "notes" text,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now() NOT NULL
-  );
-  ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "enrollment_open" boolean DEFAULT true NOT NULL;
-  ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "system_close_date" timestamp with time zone;
-`;
+  )`,
+];
 
-// Run on every cold start — CREATE TABLE IF NOT EXISTS is fully idempotent.
-// No try/catch here — errors propagate so the handler can surface them.
+// Run on every cold start — all statements are idempotent (IF NOT EXISTS / DO blocks).
 export const migrationReady: Promise<void> = (async () => {
-  await pool.query(INIT_SQL);
+  for (const sql of INIT_STATEMENTS) {
+    await pool.query(sql);
+  }
   logger.info("Schema ready");
 
   const { rows } = await pool.query(
