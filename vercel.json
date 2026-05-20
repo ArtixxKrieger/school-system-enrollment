@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/enrollment run build",
+  "buildCommand": "pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/db run push-ci && pnpm --filter @workspace/enrollment run build",
   "outputDirectory": "dist",
   "functions": {
     "api/handler.js": {
