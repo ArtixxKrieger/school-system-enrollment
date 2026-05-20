@@ -10,7 +10,7 @@ const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 // Two levels up from artifacts/api-server → workspace root
 const workspaceRoot = path.resolve(artifactDir, "../..");
 
-const EXTERNALS = ["*.node", "pg-native", "bcrypt"];
+const EXTERNALS = ["*.node", "pg-native", "bcrypt", "pino-pretty", "thread-stream"];
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
@@ -43,6 +43,7 @@ async function buildAll() {
     outfile: path.resolve(workspaceRoot, "api/handler.js"),
     logLevel: "info",
     sourcemap: false,
+    minify: true,
     external: EXTERNALS,
     // Vercel's @vercel/node reads module.exports as the handler.
     // esbuild CJS output sets exports.default; this footer bridges the gap.
