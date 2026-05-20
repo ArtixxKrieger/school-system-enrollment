@@ -48,10 +48,6 @@ Thumbs.db
 .cache/
 .local/
 
-# Vercel build output (generated during deploy, no need to commit)
-/api/handler.js
-/api/handler.js.map
-
 # Migration backup (Replit internal, not needed in repo)
 .migration-backup/
 
