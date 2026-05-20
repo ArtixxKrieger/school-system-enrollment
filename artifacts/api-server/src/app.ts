@@ -61,6 +61,30 @@ const INIT_STATEMENTS = [
   )`,
   `DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_username_unique" UNIQUE("username"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
   `DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_email_unique" UNIQUE("email"); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  // Ensure all users columns exist — safe to run even if they already exist
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "full_name" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "phone" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "address" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "birth_date" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "gender" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "profile_photo" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "role_id" integer`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" timestamp with time zone`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "session_version" integer`,
+  // Ensure enrollment_settings optional columns exist
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "enrollment_open" boolean DEFAULT true NOT NULL`,
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "system_close_date" timestamp with time zone`,
+  // Ensure course_enrollment_schedule table exists
+  `CREATE TABLE IF NOT EXISTS "course_enrollment_schedule" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "course_id" integer NOT NULL,
+    "enrollment_start_date" timestamp with time zone NOT NULL,
+    "enrollment_end_date" timestamp with time zone NOT NULL,
+    "max_slots" integer,
+    "notes" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS "courses" (
     "id" serial PRIMARY KEY NOT NULL,
     "course_code" text NOT NULL,
