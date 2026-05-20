@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Enrollment"
+title = "Enrollment System"
 version = "1.0.0"
 id = "artifacts/enrollment"
 router = "path"
