@@ -55469,7 +55469,12 @@ if (!process.env.DATABASE_URL) {
 }
 var pool = new Pool3({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes("supabase.co") ? { rejectUnauthorized: false } : void 0
+  ssl: process.env.DATABASE_URL?.includes("supabase.co") ? { rejectUnauthorized: false } : void 0,
+  // Fail fast instead of hanging indefinitely in serverless environments
+  connectionTimeoutMillis: 1e4,
+  idleTimeoutMillis: 3e4,
+  // One connection per Lambda instance is enough
+  max: 3
 });
 var db = drizzle(pool, { schema: schema_exports });
 
