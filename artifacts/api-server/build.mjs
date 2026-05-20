@@ -7,16 +7,18 @@ import { rm } from "node:fs/promises";
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
-// Two levels up from artifacts/api-server → workspace root
 const workspaceRoot = path.resolve(artifactDir, "../..");
 
-const EXTERNALS = ["*.node", "pg-native", "bcrypt", "pino-pretty", "thread-stream"];
+// Native addons that can never be bundled
+const NATIVE_EXTERNALS = ["*.node", "pg-native", "bcrypt"];
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  // 1. Local dev server bundle (index + app)
+  // 1. Local dev server — externalize ALL node_modules, only compile TS→CJS.
+  //    Packages are already installed locally so there's no need to bundle them.
+  //    This drops dist/index.cjs and dist/app.cjs from ~2.2 MB to ~50 KB.
   await esbuild({
     entryPoints: [
       path.resolve(artifactDir, "src/index.ts"),
@@ -24,17 +26,17 @@ async function buildAll() {
     ],
     platform: "node",
     bundle: true,
+    packages: "external",          // skip ALL node_modules
+    external: NATIVE_EXTERNALS,
     format: "cjs",
     outdir: distDir,
     outExtension: { ".js": ".cjs" },
     logLevel: "info",
     sourcemap: "linked",
-    external: EXTERNALS,
   });
 
-  // 2. Vercel serverless handler — built directly into api/handler.js
-  //    This replaces whatever placeholder is in git so Vercel gets a
-  //    fully self-contained CJS file with no dynamic requires.
+  // 2. Vercel serverless handler — must be fully self-contained (no node_modules
+  //    on Lambda), so we bundle everything and minify + tree-shake.
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
     platform: "node",
@@ -44,9 +46,9 @@ async function buildAll() {
     logLevel: "info",
     sourcemap: false,
     minify: true,
-    external: EXTERNALS,
+    treeShaking: true,
+    external: NATIVE_EXTERNALS,
     // Vercel's @vercel/node reads module.exports as the handler.
-    // esbuild CJS output sets exports.default; this footer bridges the gap.
     footer: {
       js: "module.exports = exports.default ?? module.exports;",
     },
