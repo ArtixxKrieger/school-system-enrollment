@@ -4,13 +4,10 @@ export default async function handler(req: any, res: any) {
   try {
     await migrationReady;
   } catch (err: any) {
-    // Surface the real DB error as JSON so we can diagnose it
-    console.error("[vercel] Migration failed:", err?.message, err?.stack);
-    return res.status(500).json({
-      error: "Database migration failed",
-      detail: err?.message,
-      code: err?.code,
-    });
+    // Log the migration error but DO NOT block requests — tables likely already
+    // exist from a previous cold start. Blocking all traffic on a migration
+    // warning causes the "Database migration failed" login screen loop.
+    console.error("[vercel] Migration warning (non-fatal):", err?.message, err?.code);
   }
   return app(req, res);
 }

@@ -2,28 +2,21 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
-import { rm } from "node:fs/promises";
+import { rm, cp } from "node:fs/promises";
 
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(artifactDir, "../..");
 
-// Native addons that can never be bundled
 const NATIVE_EXTERNALS = ["*.node", "pg-native", "bcrypt"];
 
-// Which build to run is controlled by the BUILD_TARGET env var:
-//   BUILD_TARGET=vercel  → only builds api/handler.js  (used by Vercel)
-//   BUILD_TARGET=dev     → only builds dist/*.cjs       (used locally)
-//   (unset)              → builds both
 const target = process.env.BUILD_TARGET;
 
 async function buildDevServer() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  // Bundle everything (workspace + npm packages) so all deps are self-contained.
-  // Node_modules don't need to be installed next to the output file.
   await esbuild({
     entryPoints: [
       path.resolve(artifactDir, "src/index.ts"),
@@ -38,11 +31,22 @@ async function buildDevServer() {
     logLevel: "info",
     sourcemap: "linked",
   });
+
+  // Copy pino's worker thread file so it can be found at runtime
+  try {
+    const pinoPath = globalThis.require.resolve("pino/file");
+    const pinoDir = path.dirname(pinoPath);
+    await cp(
+      path.resolve(pinoDir, "../lib/worker.js"),
+      path.resolve(distDir, "lib/worker.js"),
+      { force: true }
+    );
+  } catch {
+    // pino worker not found — safe to ignore if pino-http transport isn't used
+  }
 }
 
 async function buildVercelHandler() {
-  // Must be fully self-contained (Lambda has no node_modules).
-  // Minify + tree-shake to reduce cold-start size.
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
     platform: "node",
@@ -54,7 +58,6 @@ async function buildVercelHandler() {
     minify: true,
     treeShaking: true,
     external: NATIVE_EXTERNALS,
-    // Vercel's @vercel/node reads module.exports as the handler.
     footer: {
       js: "module.exports = exports.default ?? module.exports;",
     },

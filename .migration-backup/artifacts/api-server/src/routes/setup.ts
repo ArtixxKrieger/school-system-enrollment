@@ -184,6 +184,30 @@ const MIGRATION_STATEMENTS = [
   `ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action`,
   `ALTER TABLE "vouchers" ADD CONSTRAINT "vouchers_used_by_enrollees_id_fk" FOREIGN KEY ("used_by") REFERENCES "public"."enrollees"("id") ON DELETE set null ON UPDATE no action`,
   `ALTER TABLE "vouchers" ADD CONSTRAINT "vouchers_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action`,
+  // Ensure all users columns exist — safe for existing DBs that may be missing newer columns
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "full_name" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "phone" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "address" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "birth_date" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "gender" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "profile_photo" text`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "role_id" integer`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" timestamp with time zone`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "session_version" integer`,
+  // Ensure enrollment_settings optional columns exist
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "enrollment_open" boolean DEFAULT true NOT NULL`,
+  `ALTER TABLE "enrollment_settings" ADD COLUMN IF NOT EXISTS "system_close_date" timestamp with time zone`,
+  // Ensure course_enrollment_schedule table exists
+  `CREATE TABLE IF NOT EXISTS "course_enrollment_schedule" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "course_id" integer NOT NULL,
+    "enrollment_start_date" timestamp with time zone NOT NULL,
+    "enrollment_end_date" timestamp with time zone NOT NULL,
+    "max_slots" integer,
+    "notes" text,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+  )`,
 ];
 
 router.get("/api/setup", async (req, res) => {
@@ -208,15 +232,15 @@ router.get("/api/setup", async (req, res) => {
     }
 
     // Seed admin user
-    const [{ value: adminCount }] = await db
-      .select({ value: count() })
-      .from(usersTable)
-      .where(eq(usersTable.role, "admin"));
+    const explicitPassword = process.env["ADMIN_DEFAULT_PASSWORD"];
+    const defaultPassword = explicitPassword ?? "Admin@123";
+    const hashed = await bcrypt.hash(defaultPassword, 12);
+
+    const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, "admin"));
 
     let adminCreated = false;
-    if (Number(adminCount) === 0) {
-      const defaultPassword = process.env["ADMIN_DEFAULT_PASSWORD"] ?? "Admin@123";
-      const hashed = await bcrypt.hash(defaultPassword, 12);
+    let adminReset = false;
+    if (existing.length === 0) {
       await db.insert(usersTable).values({
         username: "admin",
         password: hashed,
@@ -226,6 +250,10 @@ router.get("/api/setup", async (req, res) => {
         isActive: true,
       });
       adminCreated = true;
+    } else if (explicitPassword) {
+      // ADMIN_DEFAULT_PASSWORD explicitly set — force-reset the password
+      await pool.query(`UPDATE users SET password = $1, is_active = true WHERE username = 'admin'`, [hashed]);
+      adminReset = true;
     }
 
     // Seed default enrollment settings
@@ -236,14 +264,19 @@ router.get("/api/setup", async (req, res) => {
       await db.insert(enrollmentSettingsTable).values({});
     }
 
+    const msg = adminCreated
+      ? `Setup complete! Admin created — username: admin, password: ${defaultPassword}`
+      : adminReset
+        ? `Admin password reset to: ${defaultPassword}`
+        : "Setup complete. Admin already existed (password unchanged).";
+
     return res.json({
       ok: true,
       tablesCreated: created,
       tablesSkipped: skipped,
       adminCreated,
-      message: adminCreated
-        ? "Setup complete! Admin created — username: admin, password: Admin@123. Login now and change the password."
-        : "Setup complete. Admin already existed.",
+      adminReset,
+      message: msg,
     });
   } catch (err: any) {
     return res.status(500).json({ ok: false, error: err.message ?? "Setup failed" });
