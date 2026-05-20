@@ -217,12 +217,16 @@ export const migrationReady: Promise<void> = (async () => {
   }
 
   try {
+    const explicitPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+    const password = explicitPassword ?? "Admin@123";
+    const hashed = await bcryptjs.hash(password, 12);
+
     const { rows } = await pool.query(
       "SELECT id FROM users WHERE username = 'admin' LIMIT 1"
     );
+
     if (rows.length === 0) {
-      const password = process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin@123";
-      const hashed = await bcryptjs.hash(password, 12);
+      // Admin doesn't exist — create it
       await pool.query(
         `INSERT INTO users (username, password, email, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -230,6 +234,14 @@ export const migrationReady: Promise<void> = (async () => {
         ["admin", hashed, "admin@kurios.local", "System Administrator", "admin", true]
       );
       logger.info("Default admin account created. CHANGE THE PASSWORD after first login.");
+    } else if (explicitPassword) {
+      // ADMIN_DEFAULT_PASSWORD is explicitly set — force-reset the password.
+      // This lets the operator recover access by setting the env var and redeploying.
+      await pool.query(
+        `UPDATE users SET password = $1 WHERE username = 'admin'`,
+        [hashed]
+      );
+      logger.info("Admin password reset via ADMIN_DEFAULT_PASSWORD env var.");
     }
   } catch (err: any) {
     logger.error({ err }, "Admin seed failed (non-fatal)");
